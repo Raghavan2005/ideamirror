@@ -15,7 +15,7 @@ export default function Loading() {
       setTimeout(() => setStep(2), 2500),     // Show "Welcome to Idea Factory"
     setTimeout(() => setStep(3), 4500), 
     setTimeout(() => setStep(4), 6000),      // Show logos
-    //  setTimeout(() => router.push('/loading'), 7000) // Redirect to home
+    setTimeout(() => router.push('/qr'), 7000) // Redirect to home
     ];
     return () => timings.forEach(clearTimeout);
   }, [router]);

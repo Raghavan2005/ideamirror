@@ -7,7 +7,27 @@ import { useRouter } from 'next/navigation';
 
 export default function Loading() {
   const router = useRouter();
- 
+ const [timeLeft, setTimeLeft] = useState(10);
+useEffect(() => {
+    if (timeLeft <= 0) {
+      router.push('/')
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+
+
+
+
   return (
   <>
   <div className="min-h-screen flex justify-center items-center bg-black text-white">
@@ -22,7 +42,21 @@ export default function Loading() {
         <div className="mt-2 text-4xl">Open Your App & Scan it</div>
       </div>
     </div>
+   <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+  <MoonLoader
+    color="#ffffff"
+    loading={true}
+    size={50}
+    aria-label="Loading Spinner"
+    data-testid="loader"
+  />
+
+  <div className="mt-2 text-2xl text-center">Skip in {minutes}:{seconds.toString().padStart(2, '0')}</div>
+</div>
+
+  
   </div>
+
 </>
 
   );
