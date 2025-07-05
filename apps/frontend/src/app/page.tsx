@@ -1,5 +1,6 @@
 import EventList from "./compounds/EventList";
 import HolidayClock from "./compounds/HolidayClock"
+import QuoteLine from "./compounds/QuoteLine";
 import WeatherWidget from "./compounds/WeatherWidget";
 import ReactPlayer from 'react-player'
 
@@ -41,7 +42,7 @@ export default function Home() {
 
       {/* Bottom Center */}
       <div className="absolute bottom-0 p-5 left-1/3 w-1/3 h-24  text-white flex items-center justify-center">
-        Quote 001
+        <QuoteLine/>
       </div>
 
       {/* Bottom Right */}
