@@ -35,14 +35,14 @@ export default function EventList() {
 
   return (
     <div className="text-gray-400 p-4 w-full font-mono text-left">
-      <h2 className="text-3xl font-semibold mb-2">Coming Events</h2>
+      <h2 className="text-3xl font-semibold mb-2 text-center  border-b border-gray-500 pb-2  ">Upcoming Events</h2>
 
       {loading ? (
         <p className="text-xl">Loading...</p>
       ) : events.length === 0 ? (
         <p className="text-xl text-gray-500">No upcoming events</p>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-1 pt-2">
           {events.map((event) => (
             <li key={event.id} className="text-2xl">
               {event.title}
