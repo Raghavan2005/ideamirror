@@ -51,9 +51,9 @@ export default function WeatherWidget() {
   const isRaining = prec_type === 'rain';
 
   return (
-    <div className="bg-black text-gray-300 p-6 w-60 rounded-xl font-mono text-center space-y-3">
+    <div className="bg-black text-gray-300 p-6 w-70 rounded-xl font-mono text-center space-y-3">
       {/* Temperature and icon */}
-      <div className="flex justify-center items-center gap-2 text-5xl font-bold leading-none">
+      <div className="flex justify-center items-center gap-2 text-6xl font-bold leading-none">
         <span>{temp2m}°</span>
         {isRaining ? (
           <CloudRain className="w-10 h-10 text-blue-400" />
@@ -63,22 +63,22 @@ export default function WeatherWidget() {
       </div>
 
       {/* Weather status */}
-      <div className="text-2xl font-semibold border-b border-gray-500 pb-1">
+      <div className="text-3xl font-semibold border-b border-gray-500 pb-1">
         {isRaining ? 'Rainy' : 'Clear'}
       </div>
 
       {/* Humidity & Wind */}
       <div className="flex justify-between items-center px-2 text-sm pt-2">
         <div className="flex flex-col items-center gap-1">
-          <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
-            <Droplets className="w-5 h-5 text-blue-300" />
+          <div className="w-15 h-15 bg-gray-800 rounded-full flex items-center justify-center">
+            <Droplets className="w-10 h-10 text-blue-300" />
           </div>
           <span className="text-2xl font-semibold mt-2">{rh2m}%</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
-          <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
-            <Wind className="w-5 h-5 text-cyan-300" />
+          <div className="w-15 h-15 bg-gray-800 rounded-full flex items-center justify-center">
+            <Wind className="w-10 h-10 text-cyan-300" />
           </div>
           <span className="text-2xl font-semibold mt-2">
             {wind10m.speed} km/h
