@@ -5,10 +5,10 @@
 [Brief one-paragraph summary of what this project does. Describe its purpose and core functionality.]
 
 ## 🧠 Key Features
-- ✅ [Feature 1: e.g., Real-time tracking / face recognition / smart control]
-- ✅ [Feature 2: e.g., Mobile App Integration / IoT Support]
-- ✅ [Feature 3: e.g., Admin Dashboard / Data Analytics]
-- ✅ [Optional: AI/ML integration, if applicable]
+-   [Feature 1: e.g., Real-time tracking / face recognition / smart control]
+-   [Feature 2: e.g., Mobile App Integration / IoT Support]
+-   [Feature 3: e.g., Admin Dashboard / Data Analytics]
+-   [Optional: AI/ML integration, if applicable]
 
 ## 🛠️ Technologies Used
 
