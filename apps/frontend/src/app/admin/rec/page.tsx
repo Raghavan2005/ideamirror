@@ -22,8 +22,8 @@ function getApiUrl() {
 // ── Toggle ──────────────────────────────────────────────────────────────────────
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
-    <button onClick={onChange} className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${on ? 'bg-white' : 'bg-zinc-700'}`}>
-      <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-transform duration-200 ${on ? 'translate-x-[22px] bg-black' : 'translate-x-0.5 bg-zinc-500'}`} />
+    <button onClick={onChange} className={`relative inline-flex w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${on ? 'bg-white' : 'bg-zinc-700'}`}>
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform duration-200 ${on ? 'translate-x-5 bg-black' : 'bg-zinc-500'}`} />
     </button>
   );
 }
