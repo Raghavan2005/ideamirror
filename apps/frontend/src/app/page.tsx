@@ -68,35 +68,40 @@ export default function Home() {
 
   const { widgets, clockFormat, muted, volume, videoFullscreen, eventCount } = appSettings;
 
+  const ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
   return (
     <div className="fixed inset-0 bg-black" style={{ opacity: overlay.opacity }}>
 
       {widgets.clock && (
-        <div className="absolute top-0 left-0 p-8">
+        <div className="absolute top-0 left-0 p-8" style={{ animation: `fadeInLeft 0.9s ${ease} both` }}>
           <HolidayClock clockFormat={clockFormat} />
         </div>
       )}
 
       {widgets.weather && (
-        <div className="absolute top-0 right-0 p-8">
+        <div className="absolute top-0 right-0 p-8" style={{ animation: `fadeInRight 0.9s ${ease} 0.15s both` }}>
           <WeatherWidget />
         </div>
       )}
 
       {widgets.player && (
-        <div className={videoFullscreen ? 'fixed inset-0 z-50' : 'absolute bottom-8 left-8 w-72 h-44 rounded-2xl overflow-hidden'}>
+        <div
+          className={videoFullscreen ? 'fixed inset-0 z-50' : 'absolute bottom-8 left-8 w-72 h-44 rounded-2xl overflow-hidden'}
+          style={videoFullscreen ? undefined : { animation: `fadeInUp 0.9s ${ease} 0.3s both` }}
+        >
           <Player muted={muted} volume={volume} />
         </div>
       )}
 
       {widgets.quotes && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-1/3">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-1/3" style={{ animation: `fadeInUp 0.9s ${ease} 0.45s both` }}>
           <QuoteLine />
         </div>
       )}
 
       {widgets.events && (
-        <div className="absolute bottom-8 right-8 w-72">
+        <div className="absolute bottom-8 right-8 w-72" style={{ animation: `fadeInRight 0.9s ${ease} 0.3s both` }}>
           <EventList eventCount={eventCount} />
         </div>
       )}

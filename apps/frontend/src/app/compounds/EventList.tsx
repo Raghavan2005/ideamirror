@@ -61,11 +61,12 @@ export default function EventList({ eventCount = 5 }: { eventCount?: number }) {
         Upcoming
       </div>
       <ul className="space-y-2.5">
-        {events.map(event => {
+        {events.map((event, i) => {
           const isPublic = event.type === 'public';
           const badge = event.isoDate ? parseDateBadge(event.isoDate) : null;
           return (
-            <li key={event.id} className="flex items-center gap-3">
+            <li key={event.id} className="flex items-center gap-3"
+              style={{ animation: `fadeInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.08}s both` }}>
               {badge ? (
                 <div className={`flex-shrink-0 flex flex-col items-center justify-center w-9 h-9 rounded-lg border ${isPublic ? 'border-amber-900/40 bg-amber-950/20' : 'border-zinc-800 bg-zinc-900'}`}>
                   <span className={`text-[8px] uppercase tracking-wider leading-none ${isPublic ? 'text-amber-700' : 'text-zinc-600'}`}>{badge.month}</span>

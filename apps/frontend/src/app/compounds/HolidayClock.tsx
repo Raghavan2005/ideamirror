@@ -53,7 +53,7 @@ export default function HolidayClock({ clockFormat }: Props) {
     <div className="text-white font-mono">
       <div className="text-sm text-gray-600 mb-1 tracking-wide">{getGreeting(now.getHours())}</div>
       <div className="text-sm text-gray-500 mb-1 tracking-wide">{date}</div>
-      <div className="text-7xl font-bold tracking-widest leading-tight">{time}</div>
+      <div key={now.getMinutes()} className="text-7xl font-bold tracking-widest leading-tight" style={{ animation: 'tickIn 0.35s ease both' }}>{time}</div>
 
       {holidays.length > 0 && (
         <div className="mt-5">

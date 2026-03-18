@@ -45,7 +45,7 @@ export default function WeatherWidget() {
   const isRaining = prec_type === 'rain';
 
   return (
-    <div className="text-white font-mono text-right">
+    <div className="text-white font-mono text-right" style={{ animation: 'fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
       {location.city && (
         <div className="text-xs text-gray-600 mb-1 tracking-wide">{location.city}, {location.region}</div>
       )}

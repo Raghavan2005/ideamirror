@@ -45,7 +45,7 @@ export default function QuoteLine() {
 
   return (
     <div className="text-gray-400 p-4 w-full font-mono text-center">
-      <div className={`text-2xl transition-opacity duration-500 ease-in-out ${fade ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`text-2xl transition-all duration-300 ease-in-out ${fade ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {quotes[index]}
       </div>
     </div>
