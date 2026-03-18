@@ -9,6 +9,7 @@ type AppSettings = {
   pin: string;
   clockFormat: '12h' | '24h';
   muted: boolean;
+  videoFullscreen: boolean;
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
 type Video = { id: number; url: string };
@@ -97,7 +98,7 @@ function PinScreen({ onUnlock }: { onUnlock: () => void }) {
 function EditScreen() {
   const [overlay, setOverlay] = useState<OverlaySettings>({ enabled: true, opacity: 1 });
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    pin: '123456', clockFormat: '12h', muted: true,
+    pin: '123456', clockFormat: '12h', muted: true, videoFullscreen: false,
     widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
   });
   const [events, setEvents] = useState<Item[]>([]);
@@ -399,6 +400,15 @@ function EditScreen() {
               onKeyDown={e => e.key === 'Enter' && updateVideo()} placeholder="YouTube URL..."
               className="flex-1 bg-gray-900 border border-gray-800 text-white placeholder-gray-700 px-3 py-2 rounded text-sm focus:outline-none focus:border-gray-600" />
             <button onClick={updateVideo} className="bg-white text-black px-4 py-2 rounded text-sm font-bold hover:bg-gray-200 transition-colors">Update</button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-300">Fullscreen on mirror</span>
+            <button
+              onClick={() => saveSetting({ videoFullscreen: !appSettings.videoFullscreen })}
+              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${appSettings.videoFullscreen ? 'bg-white' : 'bg-gray-700'}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-transform duration-200 ${appSettings.videoFullscreen ? 'translate-x-[22px] bg-black' : 'translate-x-0.5 bg-gray-500'}`} />
+            </button>
           </div>
         </section>
 

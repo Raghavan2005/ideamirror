@@ -1,7 +1,8 @@
 {
   "pin": "123456",
-  "clockFormat": "12h",
-  "muted": true,
+  "clockFormat": "24h",
+  "muted": false,
+  "videoFullscreen": false,
   "widgets": {
     "clock": true,
     "weather": true,
