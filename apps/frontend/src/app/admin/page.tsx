@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 type Item = { id: string; title: string };
+type PublicEvent = { id: string; title: string; date: string };
 type OverlaySettings = { enabled: boolean; opacity: number };
 type AppSettings = {
   clockFormat: '12h' | '24h';
@@ -21,6 +22,7 @@ export default function AdminDashboard() {
   const [overlay, setOverlay] = useState<OverlaySettings | null>(null);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [events, setEvents] = useState<Item[]>([]);
+  const [publicEvents, setPublicEvents] = useState<PublicEvent[]>([]);
   const [quotes, setQuotes] = useState<Item[]>([]);
   const [video, setVideo] = useState<Video | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -31,12 +33,14 @@ export default function AdminDashboard() {
       fetch(`${API}/api/overlay`).then(r => r.json()).catch(() => null),
       fetch(`${API}/api/settings`).then(r => r.json()).catch(() => null),
       fetch(`${API}/api/events`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/api/events/public`).then(r => r.json()).catch(() => []),
       fetch(`${API}/api/qevents`).then(r => r.json()).catch(() => []),
       fetch(`${API}/api/playlist`).then(r => r.json()).catch(() => []),
-    ]).then(([overlayData, settingsData, eventsData, quotesData, playlistData]) => {
+    ]).then(([overlayData, settingsData, eventsData, pubEventsData, quotesData, playlistData]) => {
       if (overlayData) setOverlay(overlayData);
       if (settingsData) setAppSettings(settingsData);
       setEvents(Array.isArray(eventsData) ? eventsData : []);
+      setPublicEvents(Array.isArray(pubEventsData) ? pubEventsData : []);
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
       if (Array.isArray(playlistData) && playlistData[0]) setVideo(playlistData[0]);
       setRefreshKey(k => k + 1);
@@ -144,7 +148,7 @@ export default function AdminDashboard() {
               <h2 className="text-xs uppercase tracking-widest text-zinc-600">Events</h2>
               <span className="text-xs text-zinc-700 tabular-nums">{events.length}/10</span>
             </div>
-            {events.length === 0 ? (
+            {events.length === 0 && publicEvents.length === 0 ? (
               <div className="text-zinc-700 text-xs">No events</div>
             ) : (
               <ul className="space-y-2">
@@ -152,6 +156,12 @@ export default function AdminDashboard() {
                   <li key={e.id} className="flex items-baseline gap-2">
                     <span className="text-xs text-zinc-700 tabular-nums w-4 flex-shrink-0">{i + 1}</span>
                     <span className={`text-xs truncate ${i === 0 ? 'text-white' : 'text-zinc-600'}`}>{e.title}</span>
+                  </li>
+                ))}
+                {publicEvents.map(e => (
+                  <li key={e.id} className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs truncate text-amber-500/60">{e.title}</span>
+                    <span className="text-xs text-zinc-700 flex-shrink-0">{e.date}</span>
                   </li>
                 ))}
               </ul>
