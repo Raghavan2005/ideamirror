@@ -5,15 +5,17 @@ import HolidayClock from "./compounds/HolidayClock";
 import QuoteLine from "./compounds/QuoteLine";
 import WeatherWidget from "./compounds/WeatherWidget";
 import Player from "./compounds/Player";
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 type OverlaySettings = { enabled: boolean; opacity: number };
+type SleepMode = { enabled: boolean; sleepAt: string; wakeAt: string };
 type AppSettings = {
   clockFormat: '12h' | '24h';
   muted: boolean;
   volume: number;
   videoFullscreen: boolean;
   eventCount: number;
+  sleepMode: SleepMode;
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
 
@@ -23,13 +25,34 @@ const DEFAULT_SETTINGS: AppSettings = {
   volume: 80,
   videoFullscreen: false,
   eventCount: 5,
+  sleepMode: { enabled: true, sleepAt: '21:00', wakeAt: '08:00' },
   widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
 };
+
+function checkSleep(mode: SleepMode): boolean {
+  if (!mode.enabled) return false;
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const [sh, smin] = mode.sleepAt.split(':').map(Number);
+  const [wh, wmin] = mode.wakeAt.split(':').map(Number);
+  const sleepMins = sh * 60 + smin;
+  const wakeMins = wh * 60 + wmin;
+  // Crosses midnight (e.g. sleep 21:00, wake 08:00)
+  return sleepMins > wakeMins
+    ? (cur >= sleepMins || cur < wakeMins)
+    : (cur >= sleepMins && cur < wakeMins);
+}
 
 export default function Home() {
   const [overlay, setOverlay] = useState<OverlaySettings>({ enabled: true, opacity: 1 });
   const [appSettings, setAppSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const [sleeping, setSleeping] = useState(false);
+
+  // Always-current ref so the minute-interval closure never goes stale
+  const sleepModeRef = useRef(DEFAULT_SETTINGS.sleepMode);
+  sleepModeRef.current = appSettings.sleepMode;
+  const prevSleepingRef = useRef(false);
 
   useEffect(() => {
     // SSE for instant updates from admin
@@ -58,6 +81,21 @@ export default function Home() {
     return () => { es.close(); clearInterval(interval); };
   }, []);
 
+  // Sleep mode: check every minute, trigger screen-off/on on transitions
+  useEffect(() => {
+    const check = () => {
+      const isAsleep = checkSleep(sleepModeRef.current);
+      if (isAsleep !== prevSleepingRef.current) {
+        prevSleepingRef.current = isAsleep;
+        setSleeping(isAsleep);
+        fetch(`http://localhost:4000/api/system/screen-${isAsleep ? 'off' : 'on'}`, { method: 'POST' }).catch(() => {});
+      }
+    };
+    check();
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!initialLoaded) return null;
 
   const { widgets, clockFormat, muted, volume, videoFullscreen, eventCount } = appSettings;
@@ -71,7 +109,7 @@ export default function Home() {
   const playerStyle: CSSProperties = {
     position: 'fixed',
     overflow: 'hidden',
-    opacity: overlay.enabled ? 1 : 0,
+    opacity: overlay.enabled && !sleeping ? 1 : 0,
     transition: `bottom ${fsEase}, left ${fsEase}, width ${fsEase}, height ${fsEase}, border-radius ${fsEase}, opacity ${fadeDuration}`,
     ...(videoFullscreen
       ? { top: 0, left: 0, width: '100%', height: '100%', borderRadius: 0, zIndex: 50 }
@@ -81,25 +119,30 @@ export default function Home() {
 
   return (
     <>
-      {/* Logo — fades in when mirror turns off */}
+      {/* Logo — fades in when mirror turns off or sleeping */}
       <div
-        className="fixed inset-0 bg-black flex items-center justify-center"
+        className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4"
         style={{
-          opacity: overlay.enabled ? 0 : 1,
+          opacity: !overlay.enabled || sleeping ? 1 : 0,
           transition: `opacity ${fadeDuration}`,
-          pointerEvents: overlay.enabled ? 'none' : 'auto',
+          pointerEvents: !overlay.enabled || sleeping ? 'auto' : 'none',
         }}
       >
         <img src="/images/logo2.png" alt="Idea Mirror" className="max-w-xs w-1/3 opacity-60" />
+        {sleeping && (
+          <p className="text-zinc-700 text-xs font-mono tracking-widest uppercase">
+            Wakes at {appSettings.sleepMode.wakeAt}
+          </p>
+        )}
       </div>
 
-      {/* Mirror content — fades in when mirror turns on */}
+      {/* Mirror content — fades in when mirror is on and not sleeping */}
       <div
         className="fixed inset-0 bg-black"
         style={{
-          opacity: overlay.enabled ? overlay.opacity : 0,
+          opacity: overlay.enabled && !sleeping ? overlay.opacity : 0,
           transition: `opacity ${fadeDuration}`,
-          pointerEvents: overlay.enabled ? 'auto' : 'none',
+          pointerEvents: overlay.enabled && !sleeping ? 'auto' : 'none',
         }}
       >
         {widgets.clock && (

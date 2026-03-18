@@ -13,6 +13,7 @@ type AppSettings = {
   volume: number;
   videoFullscreen: boolean;
   eventCount: number;
+  sleepMode: { enabled: boolean; sleepAt: string; wakeAt: string };
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
 type Video = { id: number; url: string };
@@ -121,6 +122,7 @@ function EditScreen() {
   const [overlay, setOverlay] = useState<OverlaySettings>({ enabled: true, opacity: 1 });
   const [appSettings, setAppSettings] = useState<AppSettings>({
     pin: '123456', clockFormat: '12h', muted: true, volume: 80, videoFullscreen: false, eventCount: 5,
+    sleepMode: { enabled: true, sleepAt: '21:00', wakeAt: '08:00' },
     widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
   });
   const [events, setEvents] = useState<Item[]>([]);
@@ -317,6 +319,45 @@ function EditScreen() {
               onChange={e => saveSetting({ volume: parseInt(e.target.value) })}
               className="w-full accent-white cursor-pointer h-1 rounded-full" />
           </div>
+        </section>
+
+        {/* Sleep Schedule */}
+        <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xs uppercase tracking-widest text-zinc-600">Sleep Schedule</h2>
+              <p className="text-xs text-zinc-700 mt-0.5">Auto screen-off during these hours</p>
+            </div>
+            <Toggle
+              on={appSettings.sleepMode.enabled}
+              onChange={() => saveSetting({ sleepMode: { ...appSettings.sleepMode, enabled: !appSettings.sleepMode.enabled } })}
+            />
+          </div>
+          <div className={`grid grid-cols-2 gap-3 transition-opacity duration-200 ${appSettings.sleepMode.enabled ? '' : 'opacity-30 pointer-events-none'}`}>
+            <div>
+              <div className="text-xs text-zinc-600 mb-1.5">Sleep at</div>
+              <input
+                type="time"
+                value={appSettings.sleepMode.sleepAt}
+                onChange={e => saveSetting({ sleepMode: { ...appSettings.sleepMode, sleepAt: e.target.value } })}
+                className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-zinc-500 transition-colors"
+              />
+            </div>
+            <div>
+              <div className="text-xs text-zinc-600 mb-1.5">Wake at</div>
+              <input
+                type="time"
+                value={appSettings.sleepMode.wakeAt}
+                onChange={e => saveSetting({ sleepMode: { ...appSettings.sleepMode, wakeAt: e.target.value } })}
+                className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-zinc-500 transition-colors"
+              />
+            </div>
+          </div>
+          {appSettings.sleepMode.enabled && (
+            <p className="text-xs text-zinc-700">
+              Screen off {appSettings.sleepMode.sleepAt} → on {appSettings.sleepMode.wakeAt}
+            </p>
+          )}
         </section>
 
         {/* Widgets */}

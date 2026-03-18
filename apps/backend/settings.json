@@ -4,7 +4,12 @@
   "muted": false,
   "volume": 30,
   "videoFullscreen": false,
-  "eventCount": 8,
+  "eventCount": 10,
+  "sleepMode": {
+    "enabled": true,
+    "sleepAt": "21:00",
+    "wakeAt": "08:00"
+  },
   "widgets": {
     "clock": true,
     "weather": true,

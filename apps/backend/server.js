@@ -320,6 +320,7 @@ const DEFAULT_SETTINGS = {
   volume: 80,
   videoFullscreen: false,
   eventCount: 5,
+  sleepMode: { enabled: true, sleepAt: '21:00', wakeAt: '08:00' },
   widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
 };
 
@@ -329,6 +330,7 @@ app.put('/api/settings', (req, res) => {
   const current = readJson(SETTINGS_FILE, DEFAULT_SETTINGS);
   const updated = { ...current, ...req.body };
   if (req.body.widgets) updated.widgets = { ...current.widgets, ...req.body.widgets };
+  if (req.body.sleepMode) updated.sleepMode = { ...current.sleepMode, ...req.body.sleepMode };
   writeJson(SETTINGS_FILE, updated);
   broadcastState();
   res.json(updated);

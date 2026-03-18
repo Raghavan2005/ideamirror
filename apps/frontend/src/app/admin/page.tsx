@@ -9,6 +9,7 @@ type OverlaySettings = { enabled: boolean; opacity: number };
 type AppSettings = {
   clockFormat: '12h' | '24h';
   muted: boolean;
+  sleepMode: { enabled: boolean; sleepAt: string; wakeAt: string };
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
 type Video = { id: number; url: string };
@@ -113,6 +114,14 @@ export default function AdminDashboard() {
                   <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${overlay.opacity * 100}%` }} />
                 </div>
               </div>
+              {appSettings.sleepMode?.enabled && (
+                <div className="flex items-center justify-between pt-1 border-t border-zinc-800/60">
+                  <span className="text-xs text-zinc-600">Sleep schedule</span>
+                  <span className="text-xs text-zinc-500 tabular-nums">
+                    {appSettings.sleepMode.sleepAt} → {appSettings.sleepMode.wakeAt}
+                  </span>
+                </div>
+              )}
             </>
           ) : (
             <div className="space-y-3 animate-pulse">
