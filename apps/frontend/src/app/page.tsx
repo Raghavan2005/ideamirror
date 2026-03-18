@@ -174,7 +174,7 @@ export default function Home() {
           Expands/collapses from the bottom-left corner using CSS property transitions. */}
       {widgets.player && (
         <div style={playerStyle}>
-          <Player muted={muted} volume={volume} />
+          <Player muted={muted || sleeping} volume={volume} />
         </div>
       )}
     </>

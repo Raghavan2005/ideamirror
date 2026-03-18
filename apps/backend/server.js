@@ -337,14 +337,25 @@ app.put('/api/settings', (req, res) => {
 });
 
 // --- System Controls ---
+
+// Set display brightness via xrandr (0 = off, 1 = full). Fails silently on unsupported setups.
+function setBrightness(level) {
+  exec(
+    `DISPLAY=:0 xrandr --listmonitors 2>/dev/null | awk 'NR>1{print $NF; exit}' | xargs -I{} DISPLAY=:0 xrandr --output {} --brightness ${level} 2>/dev/null`,
+    (err) => { if (err) console.warn('setBrightness failed (non-critical):', err.message); }
+  );
+}
+
 app.post('/api/system/screen-on', (req, res) => {
   exec('DISPLAY=:0 xset dpms force on', (err) => {
     if (err) exec('vcgencmd display_power 1');
   });
+  setBrightness(1);
   res.json({ success: true });
 });
 
 app.post('/api/system/screen-off', (req, res) => {
+  setBrightness(0);
   exec('DISPLAY=:0 xset dpms force off', (err) => {
     if (err) exec('vcgencmd display_power 0');
   });
