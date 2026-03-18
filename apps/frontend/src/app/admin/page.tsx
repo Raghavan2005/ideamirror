@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<Item[]>([]);
   const [quotes, setQuotes] = useState<Item[]>([]);
   const [video, setVideo] = useState<Video | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const loadAll = () => {
     const API = getApiUrl();
@@ -38,12 +39,13 @@ export default function AdminDashboard() {
       setEvents(Array.isArray(eventsData) ? eventsData : []);
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
       if (Array.isArray(playlistData) && playlistData[0]) setVideo(playlistData[0]);
+      setRefreshKey(k => k + 1);
     });
   };
 
   useEffect(() => {
     loadAll();
-    const interval = setInterval(loadAll, 30000); // auto-refresh every 30s
+    const interval = setInterval(loadAll, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -53,8 +55,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white font-mono">
-      <div className="border-b border-gray-800 px-8 py-5 flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-widest">IDEA MIRROR</h1>
+      <div className="border-b border-gray-800 px-8 py-4 flex items-center justify-between">
+        <img src="/images/logo2.png" alt="Idea Mirror" className="h-9" />
         <Link
           href="/admin/rec"
           className="text-xs border border-gray-700 text-gray-400 hover:border-white hover:text-white px-4 py-2 rounded transition-colors"
@@ -62,6 +64,23 @@ export default function AdminDashboard() {
           Edit →
         </Link>
       </div>
+
+      {/* Auto-refresh progress bar */}
+      <div className="h-0.5 bg-gray-900 overflow-hidden">
+        <div
+          key={refreshKey}
+          className="h-full bg-gray-600"
+          style={{ animation: 'shrink 30s linear forwards' }}
+        />
+      </div>
+
+      {/* Screen disabled banner */}
+      {overlay && !overlay.enabled && (
+        <div className="flex items-center gap-3 px-8 py-3 bg-gray-950 border-b border-gray-800">
+          <span className="w-2 h-2 rounded-full bg-gray-600 flex-shrink-0" />
+          <span className="text-xs uppercase tracking-widest text-gray-500">Screen is disabled</span>
+        </div>
+      )}
 
       <div className="p-8 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
 
