@@ -58,7 +58,7 @@ export default function Player() {
   };
 
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-full">
       {ready && currentUrl ? (
         <ReactPlayer
           url={currentUrl}

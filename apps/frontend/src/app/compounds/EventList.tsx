@@ -24,27 +24,24 @@ export default function EventList() {
   };
 
   useEffect(() => {
-    fetchEvents(); // initial load
-
-    const interval = setInterval(() => {
-      fetchEvents();
-    }, 1000); // refresh every 1 second
-
-    return () => clearInterval(interval); // cleanup
+    fetchEvents();
+    const interval = setInterval(fetchEvents, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="text-gray-400 p-4 w-full font-mono text-left">
-      <h2 className="text-3xl font-semibold mb-2 text-center  border-b border-gray-500 pb-2  ">Upcoming Events</h2>
-
+    <div className="text-white font-mono">
+      <div className="text-xs uppercase tracking-widest text-gray-600 mb-3 pb-2 border-b border-gray-800">
+        Upcoming Events
+      </div>
       {loading ? (
-        <p className="text-xl">Loading...</p>
+        <p className="text-gray-700 text-sm">Loading...</p>
       ) : events.length === 0 ? (
-        <p className="text-xl text-gray-500">No upcoming events</p>
+        <p className="text-gray-700 text-sm">No upcoming events</p>
       ) : (
-        <ul className="space-y-1 pt-2">
-          {events.map((event) => (
-            <li key={event.id} className="text-2xl">
+        <ul className="space-y-2">
+          {events.map((event, i) => (
+            <li key={event.id} className={`${i === 0 ? 'text-white text-lg font-semibold' : 'text-gray-500 text-base'}`}>
               {event.title}
             </li>
           ))}

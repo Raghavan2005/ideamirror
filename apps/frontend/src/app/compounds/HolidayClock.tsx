@@ -19,11 +19,10 @@ export default function HolidayClock() {
 
   useEffect(() => {
     const fetchHolidays = async () => {
-      const currentDate = now.toLocaleDateString('en-US', {
+      const currentDate = new Date().toLocaleDateString('en-US', {
         month: 'long',
         day: '2-digit',
-      }); // e.g. "November 01"
-
+      });
       try {
         const res = await fetch(`http://localhost:4000/api/holidays/search?date=${encodeURIComponent(currentDate)}`);
         const data = await res.json();
@@ -34,7 +33,9 @@ export default function HolidayClock() {
     };
 
     fetchHolidays();
-  }, [now]);
+    const interval = setInterval(fetchHolidays, 60 * 60 * 1000); // refresh once per hour
+    return () => clearInterval(interval);
+  }, []);
 
   const time = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
@@ -50,39 +51,30 @@ export default function HolidayClock() {
   });
 
   return (
-    <div className="text-white font-mono bg-black p-6 w-full max-w-md rounded-xl shadow-lg">
-      <div className="text-lg mb-2">{date}</div>
+    <div className="text-white font-mono">
+      <div className="text-sm text-gray-500 mb-1 tracking-wide">{date}</div>
+      <div className="text-7xl font-bold tracking-widest leading-tight">{time}</div>
 
-      <div className="text-6xl font-bold tracking-widest leading-tight">
-        {time}
-      </div>
-
-      <div className="mt-4 text-xl font-semibold">Holidays</div>
-      <hr className="border-gray-500 my-2" />
-
-      <div className="space-y-2">
-        {holidays.length === 0 ? (
-          <div className="text-gray-400 text-sm">No holidays today</div>
-        ) : (
-          holidays.map((holiday, i) => (
-            <div key={i} className="flex justify-between items-center text-1xl">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-3 h-3 rounded-full ${
-                    i === 0 ? 'bg-white' : 'bg-gray-600 opacity-70'
-                  }`}
-                />
-                <span className={`${i === 0 ? 'font-bold' : 'text-gray-400 opacity-70'}`}>
-                  {holiday.holiday}
+      {holidays.length > 0 && (
+        <div className="mt-5">
+          <div className="text-xs uppercase tracking-widest text-gray-600 mb-3">Upcoming Holidays</div>
+          <div className="space-y-2">
+            {holidays.map((holiday, i) => (
+              <div key={i} className="flex justify-between items-center gap-10">
+                <div className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${i === 0 ? 'bg-white' : 'bg-gray-700'}`} />
+                  <span className={i === 0 ? 'text-white text-sm font-semibold' : 'text-gray-600 text-xs'}>
+                    {holiday.holiday}
+                  </span>
+                </div>
+                <span className={i === 0 ? 'text-gray-400 text-sm' : 'text-gray-700 text-xs'}>
+                  {holiday.date}
                 </span>
               </div>
-              <div className={`${i === 0 ? 'font-bold' : 'text-gray-400 opacity-70'}`}>
-                {holiday.date}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
