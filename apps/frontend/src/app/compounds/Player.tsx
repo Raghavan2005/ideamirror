@@ -8,10 +8,8 @@ type Props = { muted: boolean };
 
 export default function Player({ muted }: Props) {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
 
   const loadPlaylist = () => {
-    setPlaying(false);
     fetch('http://localhost:4000/api/playlist')
       .then(res => res.json())
       .then(data => {
@@ -28,8 +26,7 @@ export default function Player({ muted }: Props) {
       {currentUrl ? (
         <ReactPlayer
           url={currentUrl}
-          playing={playing}
-          onReady={() => setPlaying(true)}
+          playing={!!currentUrl}
           muted={muted}
           controls={false}
           width="100%"
