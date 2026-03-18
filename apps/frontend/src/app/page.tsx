@@ -55,7 +55,12 @@ export default function Home() {
   }, []);
 
   if (!initialLoaded) return null;
-  if (!overlay.enabled) return null;
+
+  if (!overlay.enabled) return (
+    <div className="fixed inset-0 bg-black flex items-center justify-center">
+      <img src="/images/logo2.png" alt="Idea Mirror" className="max-w-xs w-1/3 opacity-60" />
+    </div>
+  );
 
   const { widgets, clockFormat, muted, videoFullscreen } = appSettings;
 
