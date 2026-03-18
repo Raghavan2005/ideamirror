@@ -16,7 +16,7 @@ export default function Player() {
 
   const defaultVideo: Video = {
     id: 0,
-    url: 'https://www.youtube.com/watch?v=LXb3EKWsInQ',
+    url: 'https://www.youtube.com/watch?v=tjsNLuKlNso',
   };
 
   const loadPlaylist = () => {
@@ -61,7 +61,7 @@ export default function Player() {
     <div className="w-full h-screen">
       {ready && currentUrl ? (
         <ReactPlayer
-          src={currentUrl}
+          url={currentUrl}
           playing
           muted
           controls={false}

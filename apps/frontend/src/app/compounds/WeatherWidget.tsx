@@ -18,7 +18,7 @@ export default function WeatherWidget() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/weather?lat=23.1&lon=113.2')
+    fetch('http://localhost:4000/api/weather')
       .then(res => res.json())
       .then(json => {
         const first = json?.weather?.dataseries?.[0];
