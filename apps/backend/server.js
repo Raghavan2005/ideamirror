@@ -28,6 +28,36 @@ app.use(bodyParser.json());
 // Health check
 app.get('/', (req, res) => res.send('Server is running'));
 
+// --- SSE stream ---
+let sseClients = [];
+
+app.get('/api/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  // Send current state immediately on connect
+  const payload = {
+    overlay: readJson(OVERLAY_FILE, { enabled: true, opacity: 0.9 }),
+    settings: readJson(SETTINGS_FILE, DEFAULT_SETTINGS),
+  };
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+
+  sseClients.push(res);
+  req.on('close', () => { sseClients = sseClients.filter(c => c !== res); });
+});
+
+function broadcastState() {
+  if (sseClients.length === 0) return;
+  const payload = {
+    overlay: readJson(OVERLAY_FILE, { enabled: true, opacity: 0.9 }),
+    settings: readJson(SETTINGS_FILE, DEFAULT_SETTINGS),
+  };
+  const msg = `data: ${JSON.stringify(payload)}\n\n`;
+  sseClients.forEach(c => c.write(msg));
+}
+
 // --- Helpers ---
 function readJson(file, fallback = []) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
@@ -186,6 +216,7 @@ app.put('/api/overlay', (req, res) => {
 
   const settings = { enabled, opacity };
   writeJson(OVERLAY_FILE, settings);
+  broadcastState();
   res.json({ success: true, updated: settings });
 });
 
@@ -229,6 +260,7 @@ app.put('/api/settings', (req, res) => {
   const updated = { ...current, ...req.body };
   if (req.body.widgets) updated.widgets = { ...current.widgets, ...req.body.widgets };
   writeJson(SETTINGS_FILE, updated);
+  broadcastState();
   res.json(updated);
 });
 

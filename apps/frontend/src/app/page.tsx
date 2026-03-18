@@ -28,20 +28,30 @@ export default function Home() {
   const [initialLoaded, setInitialLoaded] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
+    // SSE for instant updates from admin
+    const es = new EventSource('http://localhost:4000/api/stream');
+    es.onmessage = (e) => {
+      const { overlay: o, settings: s } = JSON.parse(e.data);
+      if (o) setOverlay(o);
+      if (s) setAppSettings(s);
+      setInitialLoaded(true);
+    };
+
+    // Polling as fallback (e.g. if SSE reconnects after backend restart)
+    const poll = () => {
       Promise.all([
         fetch('http://localhost:4000/api/overlay').then(r => r.json()).catch(() => null),
         fetch('http://localhost:4000/api/settings').then(r => r.json()).catch(() => null),
-      ]).then(([overlayData, settingsData]) => {
-        if (overlayData) setOverlay(overlayData);
-        if (settingsData) setAppSettings(settingsData);
+      ]).then(([o, s]) => {
+        if (o) setOverlay(o);
+        if (s) setAppSettings(s);
         setInitialLoaded(true);
       });
     };
+    poll();
+    const interval = setInterval(poll, 30000);
 
-    loadData();
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
+    return () => { es.close(); clearInterval(interval); };
   }, []);
 
   if (!initialLoaded) return null;
