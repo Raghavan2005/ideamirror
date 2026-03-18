@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 type Item = { id: string; title: string };
+type PublicEvent = { id: string; title: string; date: string };
 type OverlaySettings = { enabled: boolean; opacity: number };
 type AppSettings = {
   pin: string;
@@ -122,6 +123,7 @@ function EditScreen() {
     widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
   });
   const [events, setEvents] = useState<Item[]>([]);
+  const [publicEvents, setPublicEvents] = useState<PublicEvent[]>([]);
   const [quotes, setQuotes] = useState<Item[]>([]);
   const [video, setVideo] = useState<Video | null>(null);
 
@@ -146,16 +148,18 @@ function EditScreen() {
   const flash = (msg: string) => { setFeedback(msg); setTimeout(() => setFeedback(''), 2000); };
 
   const fetchAll = async () => {
-    const [overlayData, settingsData, eventsData, quotesData, playlistData] = await Promise.all([
+    const [overlayData, settingsData, eventsData, pubEventsData, quotesData, playlistData] = await Promise.all([
       fetch(`${API}/api/overlay`).then(r => r.json()).catch(() => null),
       fetch(`${API}/api/settings`).then(r => r.json()).catch(() => null),
       fetch(`${API}/api/events`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/api/events/public`).then(r => r.json()).catch(() => []),
       fetch(`${API}/api/qevents`).then(r => r.json()).catch(() => []),
       fetch(`${API}/api/playlist`).then(r => r.json()).catch(() => []),
     ]);
     if (overlayData) setOverlay(overlayData);
     if (settingsData) setAppSettings(settingsData);
     setEvents(Array.isArray(eventsData) ? eventsData : []);
+    setPublicEvents(Array.isArray(pubEventsData) ? pubEventsData : []);
     setQuotes(Array.isArray(quotesData) ? quotesData : []);
     if (Array.isArray(playlistData) && playlistData[0]) setVideo(playlistData[0]);
   };
@@ -349,7 +353,7 @@ function EditScreen() {
               className={inputCls} />
             <button onClick={addEvent} className={addBtnCls}>Add</button>
           </div>
-          {events.length === 0 && <p className="text-zinc-700 text-xs">No events yet</p>}
+          {events.length === 0 && <p className="text-zinc-700 text-xs">No custom events yet</p>}
           <ul className="space-y-1.5">
             {events.map(event => (
               <li key={event.id} className="flex items-center gap-2 bg-zinc-800 border border-zinc-700/50 px-3 py-2.5 rounded-xl">
@@ -372,6 +376,20 @@ function EditScreen() {
               </li>
             ))}
           </ul>
+
+          {publicEvents.length > 0 && (
+            <div className="pt-2 border-t border-zinc-800 space-y-2">
+              <p className="text-xs text-zinc-700 uppercase tracking-widest">Upcoming holidays (auto)</p>
+              <div className="flex flex-wrap gap-1.5">
+                {publicEvents.map(e => (
+                  <span key={e.id} className="flex items-center gap-1.5 text-xs text-amber-500/70 bg-amber-950/20 border border-amber-900/30 px-2.5 py-1 rounded-lg">
+                    <span>{e.title}</span>
+                    <span className="text-amber-700">{e.date}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Quotes */}

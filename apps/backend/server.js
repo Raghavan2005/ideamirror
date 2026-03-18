@@ -112,7 +112,31 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 
-// 🎉 Holiday API
+// 🗓️ Upcoming public holidays (next 14 days)
+app.get('/api/events/public', (req, res) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const limit = new Date(today);
+  limit.setDate(limit.getDate() + 14);
+  const thisYear = today.getFullYear();
+
+  const upcoming = [];
+  holidays.forEach(h => {
+    for (const year of [thisYear, thisYear + 1]) {
+      const d = new Date(`${h.date} ${year}`);
+      if (isNaN(d.getTime())) continue;
+      if (d >= today && d <= limit) {
+        upcoming.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, type: 'public' });
+        break;
+      }
+    }
+  });
+
+  upcoming.sort((a, b) => new Date(`${a.date} ${thisYear}`) - new Date(`${b.date} ${thisYear}`));
+  res.json(upcoming);
+});
+
+// 🎉 Holiday search API
 app.get('/api/holidays/search', (req, res) => {
   const dateQuery = req.query.date;
   if (!dateQuery) return res.status(400).json({ error: 'date query param missing' });
