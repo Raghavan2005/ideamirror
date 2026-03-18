@@ -1,42 +1,37 @@
 'use client';
-import ReactPlayer from 'react-player';
 import { useEffect, useState } from 'react';
 
 const DEFAULT_URL = 'https://www.youtube.com/watch?v=tjsNLuKlNso';
 
 type Props = { muted: boolean };
 
-export default function Player({ muted }: Props) {
-  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+function toEmbedUrl(url: string, muted: boolean): string {
+  const videoId = url.match(/[?&]v=([^&]+)/)?.[1] ?? url.split('/').pop() ?? '';
+  const mute = muted ? 1 : 0;
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${mute}&controls=0&loop=1&playlist=${videoId}&rel=0`;
+}
 
-  const loadPlaylist = () => {
+export default function Player({ muted }: Props) {
+  const [embedUrl, setEmbedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
     fetch('http://localhost:4000/api/playlist')
       .then(res => res.json())
       .then(data => {
         const url = Array.isArray(data) && data.length > 0 ? data[0].url : DEFAULT_URL;
-        setCurrentUrl(url);
+        setEmbedUrl(toEmbedUrl(url, muted));
       })
-      .catch(() => setCurrentUrl(DEFAULT_URL));
-  };
+      .catch(() => setEmbedUrl(toEmbedUrl(DEFAULT_URL, muted)));
+  }, [muted]);
 
-  useEffect(() => { loadPlaylist(); }, []);
+  if (!embedUrl) return null;
 
   return (
-    <div className="w-full h-full">
-      {currentUrl ? (
-        <ReactPlayer
-          url={currentUrl}
-          playing={!!currentUrl}
-          muted={muted}
-          controls={false}
-          width="100%"
-          height="100%"
-          style={{ borderRadius: '0.375rem' }}
-          onEnded={loadPlaylist}
-        />
-      ) : (
-        <div className="text-white text-center p-10 font-mono text-xl">Loading video...</div>
-      )}
-    </div>
+    <iframe
+      src={embedUrl}
+      allow="autoplay; encrypted-media"
+      allowFullScreen
+      style={{ width: '100%', height: '100%', border: 'none', borderRadius: '0.375rem' }}
+    />
   );
 }
