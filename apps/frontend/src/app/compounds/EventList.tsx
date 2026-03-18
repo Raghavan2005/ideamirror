@@ -2,11 +2,24 @@
 
 import { useEffect, useState } from 'react';
 
-type Event = { id: string; title: string; date?: string; type?: 'custom' | 'public' };
+type Event = {
+  id: string;
+  title: string;
+  date?: string;    // ISO for custom (2026-03-20), formatted for public ("20 Mar")
+  isoDate?: string; // always ISO — used for sorting
+  type: 'custom' | 'public';
+};
 
-export default function EventList() {
+function parseDateBadge(isoDate: string): { month: string; day: string } {
+  const parts = isoDate.split('-').map(Number);
+  const day = parts[2];
+  const tmp = new Date(isoDate + 'T00:00:00');
+  const month = tmp.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase();
+  return { month, day: String(day) };
+}
+
+export default function EventList({ eventCount = 5 }: { eventCount?: number }) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const fetchEvents = async () => {
     try {
@@ -14,13 +27,22 @@ export default function EventList() {
         fetch('http://localhost:4000/api/events').then(r => r.json()).catch(() => []),
         fetch('http://localhost:4000/api/events/public').then(r => r.json()).catch(() => []),
       ]);
-      setEvents([
-        ...(Array.isArray(custom) ? custom.map((e: Event) => ({ ...e, type: 'custom' as const })) : []),
-        ...(Array.isArray(pub) ? pub : []),
-      ]);
-      setLoading(false);
+
+      const customEvents: Event[] = (Array.isArray(custom) ? custom : []).map((e: Event) => ({
+        ...e,
+        type: 'custom' as const,
+        isoDate: e.date, // custom date field is already ISO
+      }));
+      const pubEvents: Event[] = Array.isArray(pub) ? pub : [];
+
+      // Dated events sorted by isoDate, undated custom events at the bottom
+      const dated = [...customEvents.filter(e => e.isoDate), ...pubEvents]
+        .sort((a, b) => (a.isoDate || '').localeCompare(b.isoDate || ''));
+      const undated = customEvents.filter(e => !e.isoDate);
+
+      setEvents([...dated, ...undated].slice(0, eventCount));
     } catch {
-      setLoading(false);
+      // silently keep previous state
     }
   };
 
@@ -28,35 +50,39 @@ export default function EventList() {
     fetchEvents();
     const interval = setInterval(fetchEvents, 5000);
     return () => clearInterval(interval);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventCount]);
+
+  if (events.length === 0) return null;
 
   return (
     <div className="text-white font-mono">
-      <div className="text-xs uppercase tracking-widest text-gray-600 mb-3 pb-2 border-b border-gray-800">
+      <div className="text-xs uppercase tracking-widest text-zinc-700 mb-3 pb-2 border-b border-zinc-900">
         Upcoming
       </div>
-      {loading ? (
-        <p className="text-gray-700 text-sm">Loading...</p>
-      ) : events.length === 0 ? (
-        <p className="text-gray-700 text-sm">No upcoming events</p>
-      ) : (
-        <ul className="space-y-2">
-          {events.map((event, i) => (
-            <li key={event.id} className="flex items-baseline justify-between gap-3">
-              <span className={`truncate ${
-                event.type === 'public'
-                  ? 'text-amber-400/70 text-sm'
-                  : i === 0 ? 'text-white text-lg font-semibold' : 'text-gray-500 text-base'
-              }`}>
+      <ul className="space-y-2.5">
+        {events.map(event => {
+          const isPublic = event.type === 'public';
+          const badge = event.isoDate ? parseDateBadge(event.isoDate) : null;
+          return (
+            <li key={event.id} className="flex items-center gap-3">
+              {badge ? (
+                <div className={`flex-shrink-0 flex flex-col items-center justify-center w-9 h-9 rounded-lg border ${isPublic ? 'border-amber-900/40 bg-amber-950/20' : 'border-zinc-800 bg-zinc-900'}`}>
+                  <span className={`text-[8px] uppercase tracking-wider leading-none ${isPublic ? 'text-amber-700' : 'text-zinc-600'}`}>{badge.month}</span>
+                  <span className={`text-sm font-semibold leading-none mt-0.5 ${isPublic ? 'text-amber-400' : 'text-white'}`}>{badge.day}</span>
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                </div>
+              )}
+              <span className={`text-sm truncate leading-tight ${isPublic ? 'text-amber-400/70' : 'text-zinc-300'}`}>
                 {event.title}
               </span>
-              {event.date && (
-                <span className="text-xs text-gray-700 flex-shrink-0">{event.date}</span>
-              )}
             </li>
-          ))}
-        </ul>
-      )}
+          );
+        })}
+      </ul>
     </div>
   );
 }

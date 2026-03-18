@@ -121,8 +121,10 @@ function localUpcoming(todayMs, limitMs, year) {
     const d = new Date(`${h.date} ${year}`);
     if (isNaN(d.getTime())) return;
     const ms = d.getTime();
-    if (ms >= todayMs && ms <= limitMs)
-      results.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}_${h.holiday.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, type: 'public' });
+    if (ms >= todayMs && ms <= limitMs) {
+      const isoDate = `${year}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      results.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}_${h.holiday.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, isoDate, type: 'public' });
+    }
   });
   return results;
 }
@@ -155,6 +157,7 @@ app.get('/api/events/public', async (req, res) => {
         id: `pub_${h.date}`,
         title: h.name,
         date: new Date(h.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+        isoDate: h.date,
         type: 'public',
       }))
       .sort((a, b) => a.id.localeCompare(b.id));
@@ -193,7 +196,7 @@ app.get('/api/holidays/search', (req, res) => {
 app.get('/api/events', (req, res) => res.json(readJson(EVENTS_FILE)));
 
 app.post('/api/events', (req, res) => {
-  const { title } = req.body;
+  const { title, date } = req.body;
   if (!title || typeof title !== 'string')
     return res.status(400).json({ error: 'Title is required and must be a string.' });
 
@@ -201,13 +204,14 @@ app.post('/api/events', (req, res) => {
   if (events.length >= 10) events.shift();
 
   const newEvent = { id: Date.now().toString(), title: title.trim() };
+  if (date) newEvent.date = date;
   events.push(newEvent);
   writeJson(EVENTS_FILE, events);
   res.status(201).json(newEvent);
 });
 
 app.put('/api/events/:id', (req, res) => {
-  const { title } = req.body;
+  const { title, date } = req.body;
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
   const events = readJson(EVENTS_FILE);
@@ -215,6 +219,10 @@ app.put('/api/events/:id', (req, res) => {
   if (index === -1) return res.status(404).json({ error: 'Event not found' });
 
   events[index].title = title;
+  if (date !== undefined) {
+    if (date) events[index].date = date;
+    else delete events[index].date;
+  }
   writeJson(EVENTS_FILE, events);
   res.json(events[index]);
 });
@@ -311,6 +319,7 @@ const DEFAULT_SETTINGS = {
   muted: true,
   volume: 80,
   videoFullscreen: false,
+  eventCount: 5,
   widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
 };
 

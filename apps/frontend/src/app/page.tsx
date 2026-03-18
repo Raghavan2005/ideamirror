@@ -13,6 +13,7 @@ type AppSettings = {
   muted: boolean;
   volume: number;
   videoFullscreen: boolean;
+  eventCount: number;
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
 
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   muted: true,
   volume: 80,
   videoFullscreen: false,
+  eventCount: 5,
   widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
 };
 
@@ -64,7 +66,7 @@ export default function Home() {
     </div>
   );
 
-  const { widgets, clockFormat, muted, volume, videoFullscreen } = appSettings;
+  const { widgets, clockFormat, muted, volume, videoFullscreen, eventCount } = appSettings;
 
   return (
     <div className="fixed inset-0 bg-black" style={{ opacity: overlay.opacity }}>
@@ -95,7 +97,7 @@ export default function Home() {
 
       {widgets.events && (
         <div className="absolute bottom-8 right-8 w-72">
-          <EventList />
+          <EventList eventCount={eventCount} />
         </div>
       )}
 

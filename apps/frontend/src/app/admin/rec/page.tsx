@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-type Item = { id: string; title: string };
+type Item = { id: string; title: string; date?: string };
 type PublicEvent = { id: string; title: string; date: string };
 type OverlaySettings = { enabled: boolean; opacity: number };
 type AppSettings = {
@@ -12,6 +12,7 @@ type AppSettings = {
   muted: boolean;
   volume: number;
   videoFullscreen: boolean;
+  eventCount: number;
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
 type Video = { id: number; url: string };
@@ -119,7 +120,7 @@ function PinScreen({ onUnlock }: { onUnlock: () => void }) {
 function EditScreen() {
   const [overlay, setOverlay] = useState<OverlaySettings>({ enabled: true, opacity: 1 });
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    pin: '123456', clockFormat: '12h', muted: true, volume: 80, videoFullscreen: false,
+    pin: '123456', clockFormat: '12h', muted: true, volume: 80, videoFullscreen: false, eventCount: 5,
     widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
   });
   const [events, setEvents] = useState<Item[]>([]);
@@ -128,6 +129,7 @@ function EditScreen() {
   const [video, setVideo] = useState<Video | null>(null);
 
   const [newEvent, setNewEvent] = useState('');
+  const [newEventDate, setNewEventDate] = useState('');
   const [newQuote, setNewQuote] = useState('');
   const [newVideoUrl, setNewVideoUrl] = useState('');
 
@@ -199,12 +201,14 @@ function EditScreen() {
   // Events
   const addEvent = async () => {
     if (!newEvent.trim()) return;
-    await fetch(`${API}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newEvent.trim() }) });
-    setNewEvent(''); fetchAll(); flash('Event added');
+    const body: { title: string; date?: string } = { title: newEvent.trim() };
+    if (newEventDate) body.date = newEventDate;
+    await fetch(`${API}/api/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    setNewEvent(''); setNewEventDate(''); fetchAll(); flash('Event added');
   };
   const saveEditEvent = async () => {
     if (!editingEvent) return;
-    await fetch(`${API}/api/events/${editingEvent.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: editingEvent.title }) });
+    await fetch(`${API}/api/events/${editingEvent.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: editingEvent.title, date: editingEvent.date || '' }) });
     setEditingEvent(null); fetchAll(); flash('Event updated');
   };
   const deleteEvent = async (id: string) => { await fetch(`${API}/api/events/${id}`, { method: 'DELETE' }); fetchAll(); };
@@ -345,32 +349,53 @@ function EditScreen() {
         <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs uppercase tracking-widest text-zinc-600">Events</h2>
-            <span className="text-xs text-zinc-700 tabular-nums">{events.length}/10</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-zinc-700">Show on mirror:</span>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => saveSetting({ eventCount: Math.max(1, (appSettings.eventCount ?? 5) - 1) })}
+                  className="w-6 h-6 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors text-sm leading-none">−</button>
+                <span className="text-sm text-white tabular-nums w-4 text-center">{appSettings.eventCount ?? 5}</span>
+                <button onClick={() => saveSetting({ eventCount: Math.min(10, (appSettings.eventCount ?? 5) + 1) })}
+                  className="w-6 h-6 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors text-sm leading-none">+</button>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <input type="text" value={newEvent} onChange={e => setNewEvent(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addEvent()} placeholder="Add event…"
-              className={inputCls} />
-            <button onClick={addEvent} className={addBtnCls}>Add</button>
+          <div className="space-y-1.5">
+            <div className="flex gap-2">
+              <input type="text" value={newEvent} onChange={e => setNewEvent(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addEvent()} placeholder="Add event…"
+                className={inputCls} />
+              <button onClick={addEvent} className={addBtnCls}>Add</button>
+            </div>
+            <input type="date" value={newEventDate} onChange={e => setNewEventDate(e.target.value)}
+              className="w-full bg-zinc-800/50 border border-zinc-800 text-zinc-500 px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-zinc-600 transition-colors" />
           </div>
           {events.length === 0 && <p className="text-zinc-700 text-xs">No custom events yet</p>}
           <ul className="space-y-1.5">
             {events.map(event => (
               <li key={event.id} className="flex items-center gap-2 bg-zinc-800 border border-zinc-700/50 px-3 py-2.5 rounded-xl">
                 {editingEvent?.id === event.id ? (
-                  <>
+                  <div className="flex-1 space-y-1.5">
                     <input autoFocus value={editingEvent.title}
                       onChange={e => setEditingEvent({ ...editingEvent, title: e.target.value })}
                       onKeyDown={e => { if (e.key === 'Enter') saveEditEvent(); if (e.key === 'Escape') setEditingEvent(null); }}
-                      className="flex-1 bg-transparent text-white text-sm focus:outline-none border-b border-zinc-600" />
-                    <button onClick={saveEditEvent} className="text-emerald-400 text-xs hover:text-emerald-300 transition-colors px-1">✓</button>
-                    <button onClick={() => setEditingEvent(null)} className="text-zinc-600 text-xs hover:text-zinc-400 transition-colors px-1">✕</button>
-                  </>
+                      className="w-full bg-transparent text-white text-sm focus:outline-none border-b border-zinc-600" />
+                    <input type="date" value={editingEvent.date || ''}
+                      onChange={e => setEditingEvent({ ...editingEvent, date: e.target.value })}
+                      className="w-full bg-transparent text-zinc-500 text-xs focus:outline-none border-b border-zinc-700" />
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={saveEditEvent} className="text-emerald-400 text-xs hover:text-emerald-300 transition-colors">Save</button>
+                      <button onClick={() => setEditingEvent(null)} className="text-zinc-600 text-xs hover:text-zinc-400 transition-colors">Cancel</button>
+                    </div>
+                  </div>
                 ) : (
                   <>
-                    <span className="flex-1 text-zinc-300 text-sm truncate cursor-pointer hover:text-white transition-colors" onClick={() => setEditingEvent(event)}>{event.title}</span>
-                    <button onClick={() => setEditingEvent(event)} className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors px-1">✎</button>
-                    <button onClick={() => deleteEvent(event.id)} className="text-zinc-700 hover:text-red-400 text-xs transition-colors px-1">✕</button>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-zinc-300 text-sm truncate block cursor-pointer hover:text-white transition-colors" onClick={() => setEditingEvent(event)}>{event.title}</span>
+                      {event.date && <span className="text-zinc-600 text-xs">{event.date}</span>}
+                    </div>
+                    <button onClick={() => setEditingEvent(event)} className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors px-1 flex-shrink-0">✎</button>
+                    <button onClick={() => deleteEvent(event.id)} className="text-zinc-700 hover:text-red-400 text-xs transition-colors px-1 flex-shrink-0">✕</button>
                   </>
                 )}
               </li>

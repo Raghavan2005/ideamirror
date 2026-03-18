@@ -4,6 +4,7 @@
   "muted": false,
   "volume": 30,
   "videoFullscreen": false,
+  "eventCount": 8,
   "widgets": {
     "clock": true,
     "weather": true,
