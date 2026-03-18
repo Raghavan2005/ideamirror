@@ -112,28 +112,43 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 
-// 🗓️ Upcoming public holidays (next 14 days)
-app.get('/api/events/public', (req, res) => {
+// 🗓️ Upcoming public holidays — fetched from Nager.Date (free, no key)
+const publicHolidayCache = {}; // keyed by year
+
+app.get('/api/events/public', async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const limit = new Date(today);
   limit.setDate(limit.getDate() + 14);
-  const thisYear = today.getFullYear();
 
-  const upcoming = [];
-  holidays.forEach(h => {
-    for (const year of [thisYear, thisYear + 1]) {
-      const d = new Date(`${h.date} ${year}`);
-      if (isNaN(d.getTime())) continue;
-      if (d >= today && d <= limit) {
-        upcoming.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, type: 'public' });
-        break;
+  try {
+    const yearsNeeded = [today.getFullYear()];
+    if (limit.getFullYear() > today.getFullYear()) yearsNeeded.push(limit.getFullYear());
+
+    const allHolidays = [];
+    for (const year of yearsNeeded) {
+      if (!publicHolidayCache[year]) {
+        const resp = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/IN`);
+        publicHolidayCache[year] = resp.data;
       }
+      allHolidays.push(...publicHolidayCache[year]);
     }
-  });
 
-  upcoming.sort((a, b) => new Date(`${a.date} ${thisYear}`) - new Date(`${b.date} ${thisYear}`));
-  res.json(upcoming);
+    const upcoming = allHolidays
+      .filter(h => { const d = new Date(h.date); return d >= today && d <= limit; })
+      .map(h => ({
+        id: `pub_${h.date}`,
+        title: h.name,
+        date: new Date(h.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+        type: 'public',
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    res.json(upcoming);
+  } catch (err) {
+    console.error('Failed to fetch public holidays:', err.message);
+    res.json([]);
+  }
 });
 
 // 🎉 Holiday search API
