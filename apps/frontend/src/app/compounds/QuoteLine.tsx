@@ -1,59 +1,51 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function QuoteLine() {
   const [quotes, setQuotes] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
   const [fade, setFade] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const quotesRef = useRef<string[]>([]);
 
-  // 🔄 Poll quotes from API every 5 seconds
+  // Poll quotes independently — does not affect rotation
   useEffect(() => {
     const fetchQuotes = () => {
       fetch('http://localhost:4000/api/qevents')
         .then(res => res.json())
         .then(data => {
-          const titles = Array.isArray(data) ? data.map((item: any) => item.title) : [];
+          const titles = Array.isArray(data) ? data.map((item: { title: string }) => item.title) : [];
           setQuotes(titles);
+          quotesRef.current = titles;
+          setLoaded(true);
         })
-        .catch(err => console.error('Failed to load quotes:', err));
+        .catch(() => setLoaded(true));
     };
 
-    fetchQuotes(); // initial fetch
-    const poller = setInterval(fetchQuotes, 5000); // poll every 5s
-
+    fetchQuotes();
+    const poller = setInterval(fetchQuotes, 5000);
     return () => clearInterval(poller);
   }, []);
 
-  // ⏱ Handle index change every 5 seconds
+  // Rotation runs independently using ref — never resets due to re-polls
   useEffect(() => {
-    if (quotes.length === 0) return;
-
     const rotate = setInterval(() => {
+      if (quotesRef.current.length === 0) return;
       setFade(false);
       setTimeout(() => {
-        setIndex(prev => (prev + 1) % quotes.length);
+        setIndex(prev => (prev + 1) % quotesRef.current.length);
         setFade(true);
       }, 300);
     }, 5000);
-
     return () => clearInterval(rotate);
-  }, [quotes]);
+  }, []);
 
-  if (quotes.length === 0) {
-    return (
-      <div className="text-gray-400 p-4 w-full font-mono text-center">
-        <div className="text-2xl opacity-50">Loading...</div>
-      </div>
-    );
-  }
+  if (!loaded) return null;
+  if (quotes.length === 0) return null;
 
   return (
     <div className="text-gray-400 p-4 w-full font-mono text-center">
-      <div
-        className={`text-2xl transition-opacity duration-500 ease-in-out ${
-          fade ? 'opacity-100' : 'opacity-0'    
-        }`}
-      >
+      <div className={`text-2xl transition-opacity duration-500 ease-in-out ${fade ? 'opacity-100' : 'opacity-0'}`}>
         {quotes[index]}
       </div>
     </div>

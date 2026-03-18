@@ -8,19 +8,37 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 
-const EVENTS_FILE = path.join(__dirname, 'events.json');
-const QEVENTS_FILE = path.join(__dirname, 'line.json');
-const OVERLAY_FILE = path.join(__dirname, 'overlay.json');
-const PLAYLIST_FILE = path.join(__dirname, 'playlist.json');
+const EVENTS_FILE    = path.join(__dirname, 'events.json');
+const QEVENTS_FILE   = path.join(__dirname, 'line.json');
+const OVERLAY_FILE   = path.join(__dirname, 'overlay.json');
+const PLAYLIST_FILE  = path.join(__dirname, 'playlist.json');
+const SETTINGS_FILE  = path.join(__dirname, 'settings.json');
 const PORT = 4000;
+
+// Chennai default coords (fallback when running on localhost)
+const CHENNAI = { lat: 13.0827, lon: 80.2707, city: 'Chennai', region: 'Tamil Nadu', country: 'India' };
+
+// 30-minute weather cache
+let weatherCache = { key: null, data: null, time: 0 };
+const CACHE_MS = 30 * 60 * 1000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
 // Health check
-app.get('/', (req, res) => {
-  res.send('Server is running');
-});
+app.get('/', (req, res) => res.send('Server is running'));
+
+// --- Helpers ---
+function readJson(file, fallback = []) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch { return fallback; }
+}
+function writeJson(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+}
+function isLocalhost(ip) {
+  return !ip || ['::1', '127.0.0.1', '::ffff:127.0.0.1'].includes(ip);
+}
 
 // 🌤️ Weather API
 app.get('/api/weather', async (req, res) => {
@@ -29,30 +47,35 @@ app.get('/api/weather', async (req, res) => {
 
   try {
     if (!lat || !lon) {
-      const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress;
-      const geo = await axios.get(`http://ip-api.com/json/${ip}`);
-      const location = geo.data;
+      const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
 
-      if (location.status !== 'success') {
-        return res.status(400).json({ error: 'Failed to determine location from IP' });
+      if (isLocalhost(ip)) {
+        lat = CHENNAI.lat;
+        lon = CHENNAI.lon;
+        locationInfo = { city: CHENNAI.city, region: CHENNAI.region, country: CHENNAI.country };
+      } else {
+        const geo = await axios.get(`http://ip-api.com/json/${ip}`);
+        const location = geo.data;
+        if (location.status !== 'success') {
+          return res.status(400).json({ error: 'Failed to determine location from IP' });
+        }
+        lat = location.lat;
+        lon = location.lon;
+        locationInfo = { city: location.city, region: location.regionName, country: location.country };
       }
+    }
 
-      lat = location.lat;
-      lon = location.lon;
-      locationInfo = {
-        city: location.city,
-        region: location.regionName,
-        country: location.country,
-      };
+    const cacheKey = `${lat},${lon}`;
+    if (weatherCache.key === cacheKey && Date.now() - weatherCache.time < CACHE_MS) {
+      return res.json(weatherCache.data);
     }
 
     const url = `https://www.7timer.info/bin/astro.php?lon=${lon}&lat=${lat}&ac=0&unit=metric&output=json&tzshift=0`;
     const weatherResponse = await axios.get(url);
+    const responseData = { location: locationInfo || { lat, lon }, weather: weatherResponse.data };
 
-    res.json({
-      location: locationInfo || { lat, lon },
-      weather: weatherResponse.data,
-    });
+    weatherCache = { key: cacheKey, data: responseData, time: Date.now() };
+    res.json(responseData);
   } catch (err) {
     console.error('Error fetching weather:', err.message);
     res.status(500).json({ error: 'Failed to fetch weather data' });
@@ -65,7 +88,7 @@ app.get('/api/holidays/search', (req, res) => {
   if (!dateQuery) return res.status(400).json({ error: 'date query param missing' });
 
   const baseDate = new Date(`${dateQuery} ${new Date().getFullYear()}`);
-  if (isNaN(baseDate)) return res.status(400).json({ error: 'Invalid date format' });
+  if (isNaN(baseDate.getTime())) return res.status(400).json({ error: 'Invalid date format' });
 
   const result = holidays.filter(h => {
     const holidayDate = new Date(`${h.date} ${new Date().getFullYear()}`);
@@ -75,15 +98,6 @@ app.get('/api/holidays/search', (req, res) => {
 
   res.json(result);
 });
-
-// --- Helpers ---
-function readJson(file) {
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
-  catch { return []; }
-}
-function writeJson(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
-}
 
 // --- Events ---
 app.get('/api/events', (req, res) => res.json(readJson(EVENTS_FILE)));
@@ -163,13 +177,7 @@ app.delete('/api/qevents/:id', (req, res) => {
 });
 
 // --- Overlay ---
-app.get('/api/overlay', (req, res) => {
-  try {
-    res.json(JSON.parse(fs.readFileSync(OVERLAY_FILE, 'utf8')));
-  } catch {
-    res.json({ enabled: false, opacity: 0.4 });
-  }
-});
+app.get('/api/overlay', (req, res) => res.json(readJson(OVERLAY_FILE, { enabled: true, opacity: 0.9 })));
 
 app.put('/api/overlay', (req, res) => {
   const { enabled, opacity } = req.body;
@@ -177,7 +185,7 @@ app.put('/api/overlay', (req, res) => {
     return res.status(400).json({ error: 'Invalid payload' });
 
   const settings = { enabled, opacity };
-  fs.writeFileSync(OVERLAY_FILE, JSON.stringify(settings, null, 2), 'utf8');
+  writeJson(OVERLAY_FILE, settings);
   res.json({ success: true, updated: settings });
 });
 
@@ -203,6 +211,24 @@ app.put('/api/playlist/:id', (req, res) => {
   const video = { id: 1, url };
   writeJson(PLAYLIST_FILE, [video]);
   res.json(video);
+});
+
+// --- Settings ---
+const DEFAULT_SETTINGS = {
+  pin: '123456',
+  clockFormat: '12h',
+  muted: true,
+  widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
+};
+
+app.get('/api/settings', (req, res) => res.json(readJson(SETTINGS_FILE, DEFAULT_SETTINGS)));
+
+app.put('/api/settings', (req, res) => {
+  const current = readJson(SETTINGS_FILE, DEFAULT_SETTINGS);
+  const updated = { ...current, ...req.body };
+  if (req.body.widgets) updated.widgets = { ...current.widgets, ...req.body.widgets };
+  writeJson(SETTINGS_FILE, updated);
+  res.json(updated);
 });
 
 // --- System Controls ---
@@ -231,6 +257,4 @@ app.post('/api/system/shutdown', (req, res) => {
 });
 
 // Start
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

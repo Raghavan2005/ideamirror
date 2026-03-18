@@ -5,6 +5,11 @@ import Link from 'next/link';
 
 type Item = { id: string; title: string };
 type OverlaySettings = { enabled: boolean; opacity: number };
+type AppSettings = {
+  clockFormat: '12h' | '24h';
+  muted: boolean;
+  widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
+};
 type Video = { id: number; url: string };
 
 function getApiUrl() {
@@ -14,28 +19,40 @@ function getApiUrl() {
 
 export default function AdminDashboard() {
   const [overlay, setOverlay] = useState<OverlaySettings | null>(null);
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [events, setEvents] = useState<Item[]>([]);
   const [quotes, setQuotes] = useState<Item[]>([]);
   const [video, setVideo] = useState<Video | null>(null);
 
-  useEffect(() => {
+  const loadAll = () => {
     const API = getApiUrl();
     Promise.all([
       fetch(`${API}/api/overlay`).then(r => r.json()).catch(() => null),
+      fetch(`${API}/api/settings`).then(r => r.json()).catch(() => null),
       fetch(`${API}/api/events`).then(r => r.json()).catch(() => []),
       fetch(`${API}/api/qevents`).then(r => r.json()).catch(() => []),
       fetch(`${API}/api/playlist`).then(r => r.json()).catch(() => []),
-    ]).then(([overlayData, eventsData, quotesData, playlistData]) => {
+    ]).then(([overlayData, settingsData, eventsData, quotesData, playlistData]) => {
       if (overlayData) setOverlay(overlayData);
+      if (settingsData) setAppSettings(settingsData);
       setEvents(Array.isArray(eventsData) ? eventsData : []);
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
       if (Array.isArray(playlistData) && playlistData[0]) setVideo(playlistData[0]);
     });
+  };
+
+  useEffect(() => {
+    loadAll();
+    const interval = setInterval(loadAll, 30000); // auto-refresh every 30s
+    return () => clearInterval(interval);
   }, []);
+
+  const widgetLabels: Record<string, string> = {
+    clock: 'Clock', weather: 'Weather', events: 'Events', quotes: 'Quotes', player: 'Player',
+  };
 
   return (
     <div className="min-h-screen bg-black text-white font-mono">
-
       <div className="border-b border-gray-800 px-8 py-5 flex items-center justify-between">
         <h1 className="text-xl font-bold tracking-widest">IDEA MIRROR</h1>
         <Link
@@ -51,7 +68,7 @@ export default function AdminDashboard() {
         {/* Mirror Status */}
         <section className="bg-gray-900 rounded-lg p-5 space-y-3">
           <h2 className="text-xs uppercase tracking-widest text-gray-600">Display</h2>
-          {overlay ? (
+          {overlay && appSettings ? (
             <>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Status</span>
@@ -63,7 +80,34 @@ export default function AdminDashboard() {
                 <span className="text-sm text-gray-400">Opacity</span>
                 <span className="text-sm text-white">{Math.round(overlay.opacity * 100)}%</span>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Sound</span>
+                <span className={`text-xs px-2.5 py-1 rounded-full ${appSettings.muted ? 'bg-gray-800 text-gray-500' : 'bg-white text-black font-semibold'}`}>
+                  {appSettings.muted ? 'MUTED' : 'ON'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Clock</span>
+                <span className="text-xs text-gray-500">{appSettings.clockFormat}</span>
+              </div>
             </>
+          ) : (
+            <div className="text-gray-700 text-sm">Loading...</div>
+          )}
+        </section>
+
+        {/* Widgets */}
+        <section className="bg-gray-900 rounded-lg p-5 space-y-3">
+          <h2 className="text-xs uppercase tracking-widest text-gray-600">Widgets</h2>
+          {appSettings ? (
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(appSettings.widgets).map(([key, enabled]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${enabled ? 'bg-white' : 'bg-gray-700'}`} />
+                  <span className={`text-sm ${enabled ? 'text-gray-300' : 'text-gray-700'}`}>{widgetLabels[key]}</span>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="text-gray-700 text-sm">Loading...</div>
           )}
@@ -90,16 +134,14 @@ export default function AdminDashboard() {
           ) : (
             <ul className="space-y-1.5">
               {events.map((e, i) => (
-                <li key={e.id} className={`text-sm truncate ${i === 0 ? 'text-white' : 'text-gray-600'}`}>
-                  {e.title}
-                </li>
+                <li key={e.id} className={`text-sm truncate ${i === 0 ? 'text-white' : 'text-gray-600'}`}>{e.title}</li>
               ))}
             </ul>
           )}
         </section>
 
         {/* Quotes */}
-        <section className="bg-gray-900 rounded-lg p-5 space-y-3">
+        <section className="bg-gray-900 rounded-lg p-5 space-y-3 md:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-xs uppercase tracking-widest text-gray-600">Ticker Quotes</h2>
             <span className="text-xs text-gray-700">{quotes.length}</span>
@@ -107,11 +149,9 @@ export default function AdminDashboard() {
           {quotes.length === 0 ? (
             <div className="text-gray-700 text-sm">No quotes</div>
           ) : (
-            <ul className="space-y-1.5">
-              {quotes.map((q, i) => (
-                <li key={q.id} className={`text-sm truncate ${i === 0 ? 'text-white' : 'text-gray-600'}`}>
-                  {q.title}
-                </li>
+            <ul className="flex flex-wrap gap-2">
+              {quotes.map(q => (
+                <li key={q.id} className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded truncate max-w-xs">{q.title}</li>
               ))}
             </ul>
           )}

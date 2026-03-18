@@ -6,51 +6,52 @@ import { Droplets, Wind, CloudRain, Sun } from 'lucide-react';
 type WeatherData = {
   temp2m: number;
   rh2m: number;
-  wind10m: {
-    direction: string;
-    speed: number;
-  };
+  wind10m: { direction: string; speed: number };
   prec_type: string;
 };
 
+type LocationInfo = { city?: string; region?: string; country?: string };
+
 export default function WeatherWidget() {
   const [data, setData] = useState<WeatherData | null>(null);
+  const [location, setLocation] = useState<LocationInfo>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchWeather = () => {
     fetch('http://localhost:4000/api/weather')
       .then(res => res.json())
       .then(json => {
         const first = json?.weather?.dataseries?.[0];
         if (first) setData(first);
+        if (json?.location?.city) setLocation(json.location);
         setLoading(false);
       })
       .catch(err => {
         console.error('Weather fetch error:', err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000); // refresh every 30 min
+    return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
-    return <div className="text-gray-600 font-mono text-sm text-right">Loading weather...</div>;
-  }
-
-  if (!data) {
-    return <div className="text-gray-700 font-mono text-sm text-right">Weather unavailable</div>;
-  }
+  if (loading) return <div className="text-gray-600 font-mono text-sm text-right">Loading weather...</div>;
+  if (!data) return <div className="text-gray-700 font-mono text-sm text-right">Weather unavailable</div>;
 
   const { temp2m, rh2m, wind10m, prec_type } = data;
   const isRaining = prec_type === 'rain';
 
   return (
     <div className="text-white font-mono text-right">
+      {location.city && (
+        <div className="text-xs text-gray-600 mb-1 tracking-wide">{location.city}, {location.region}</div>
+      )}
       <div className="flex items-center justify-end gap-3">
         <span className="text-7xl font-bold">{temp2m}°</span>
-        {isRaining ? (
-          <CloudRain className="w-12 h-12 text-blue-400" />
-        ) : (
-          <Sun className="w-12 h-12 text-yellow-400" />
-        )}
+        {isRaining ? <CloudRain className="w-12 h-12 text-blue-400" /> : <Sun className="w-12 h-12 text-yellow-400" />}
       </div>
       <div className="text-xl text-gray-500 mt-1 tracking-wide">{isRaining ? 'Rainy' : 'Clear'}</div>
       <div className="flex justify-end gap-5 mt-3 text-gray-500 text-sm">

@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 
 const DEFAULT_URL = 'https://www.youtube.com/watch?v=tjsNLuKlNso';
 
-export default function Player() {
+type Props = { muted: boolean };
+
+export default function Player({ muted }: Props) {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
 
   const loadPlaylist = () => {
@@ -17,9 +19,7 @@ export default function Player() {
       .catch(() => setCurrentUrl(DEFAULT_URL));
   };
 
-  useEffect(() => {
-    loadPlaylist();
-  }, []);
+  useEffect(() => { loadPlaylist(); }, []);
 
   return (
     <div className="w-full h-full">
@@ -27,7 +27,7 @@ export default function Player() {
         <ReactPlayer
           url={currentUrl}
           playing
-          muted
+          muted={muted}
           controls={false}
           width="100%"
           height="100%"
@@ -35,9 +35,7 @@ export default function Player() {
           onEnded={loadPlaylist}
         />
       ) : (
-        <div className="text-white text-center p-10 font-mono text-xl">
-          Loading video...
-        </div>
+        <div className="text-white text-center p-10 font-mono text-xl">Loading video...</div>
       )}
     </div>
   );

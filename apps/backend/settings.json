@@ -1,0 +1,12 @@
+{
+  "pin": "123456",
+  "clockFormat": "12h",
+  "muted": true,
+  "widgets": {
+    "clock": true,
+    "weather": true,
+    "events": true,
+    "quotes": true,
+    "player": true
+  }
+}
