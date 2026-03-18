@@ -130,6 +130,7 @@ function EditScreen() {
 
   const [editingEvent, setEditingEvent] = useState<Item | null>(null);
   const [editingQuote, setEditingQuote] = useState<Item | null>(null);
+  const [quotesExpanded, setQuotesExpanded] = useState(false);
 
   const [confirm, setConfirm] = useState<{ action: string; message: string } | null>(null);
   const [feedback, setFeedback] = useState('');
@@ -367,7 +368,11 @@ function EditScreen() {
         <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs uppercase tracking-widest text-zinc-600">Ticker Quotes</h2>
-            <span className="text-xs text-zinc-700 tabular-nums">{quotes.length}</span>
+            <button onClick={() => setQuotesExpanded(v => !v)}
+              className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+              <span className="tabular-nums">{quotes.length} quotes</span>
+              <span className={`transition-transform duration-200 ${quotesExpanded ? 'rotate-180' : ''}`}>↓</span>
+            </button>
           </div>
           <div className="flex gap-2">
             <input type="text" value={newQuote} onChange={e => setNewQuote(e.target.value)}
@@ -375,29 +380,33 @@ function EditScreen() {
               className={inputCls} />
             <button onClick={addQuote} className={addBtnCls}>Add</button>
           </div>
-          {quotes.length === 0 && <p className="text-zinc-700 text-xs">No quotes yet</p>}
-          <ul className="space-y-1.5">
-            {quotes.map(quote => (
-              <li key={quote.id} className="flex items-center gap-2 bg-zinc-800 border border-zinc-700/50 px-3 py-2.5 rounded-xl">
-                {editingQuote?.id === quote.id ? (
-                  <>
-                    <input autoFocus value={editingQuote.title}
-                      onChange={e => setEditingQuote({ ...editingQuote, title: e.target.value })}
-                      onKeyDown={e => { if (e.key === 'Enter') saveEditQuote(); if (e.key === 'Escape') setEditingQuote(null); }}
-                      className="flex-1 bg-transparent text-white text-sm focus:outline-none border-b border-zinc-600" />
-                    <button onClick={saveEditQuote} className="text-emerald-400 text-xs hover:text-emerald-300 transition-colors px-1">✓</button>
-                    <button onClick={() => setEditingQuote(null)} className="text-zinc-600 text-xs hover:text-zinc-400 transition-colors px-1">✕</button>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex-1 text-zinc-300 text-sm truncate cursor-pointer hover:text-white transition-colors" onClick={() => setEditingQuote(quote)}>{quote.title}</span>
-                    <button onClick={() => setEditingQuote(quote)} className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors px-1">✎</button>
-                    <button onClick={() => deleteQuote(quote.id)} className="text-zinc-700 hover:text-red-400 text-xs transition-colors px-1">✕</button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
+          {quotesExpanded && (
+            <>
+              {quotes.length === 0 && <p className="text-zinc-700 text-xs">No quotes yet</p>}
+              <ul className="space-y-1.5">
+                {quotes.map(quote => (
+                  <li key={quote.id} className="flex items-center gap-2 bg-zinc-800 border border-zinc-700/50 px-3 py-2.5 rounded-xl">
+                    {editingQuote?.id === quote.id ? (
+                      <>
+                        <input autoFocus value={editingQuote.title}
+                          onChange={e => setEditingQuote({ ...editingQuote, title: e.target.value })}
+                          onKeyDown={e => { if (e.key === 'Enter') saveEditQuote(); if (e.key === 'Escape') setEditingQuote(null); }}
+                          className="flex-1 bg-transparent text-white text-sm focus:outline-none border-b border-zinc-600" />
+                        <button onClick={saveEditQuote} className="text-emerald-400 text-xs hover:text-emerald-300 transition-colors px-1">✓</button>
+                        <button onClick={() => setEditingQuote(null)} className="text-zinc-600 text-xs hover:text-zinc-400 transition-colors px-1">✕</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex-1 text-zinc-300 text-sm truncate cursor-pointer hover:text-white transition-colors" onClick={() => setEditingQuote(quote)}>{quote.title}</span>
+                        <button onClick={() => setEditingQuote(quote)} className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors px-1">✎</button>
+                        <button onClick={() => deleteQuote(quote.id)} className="text-zinc-700 hover:text-red-400 text-xs transition-colors px-1">✕</button>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
 
         {/* Video */}
