@@ -54,134 +54,143 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-mono">
-      <div className="border-b border-gray-800 px-8 py-4 flex items-center justify-between">
-        <img src="/images/logo2.png" alt="Idea Mirror" className="h-9" />
+    <div className="min-h-screen bg-zinc-950 text-white font-mono">
+
+      {/* Header */}
+      <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+        <img src="/images/logo2.png" alt="Idea Mirror" className="h-8" />
         <Link
           href="/admin/rec"
-          className="text-xs border border-gray-700 text-gray-400 hover:border-white hover:text-white px-4 py-2 rounded transition-colors"
+          className="text-xs border border-zinc-700 text-zinc-400 hover:border-white hover:text-white px-4 py-2 rounded-lg transition-colors"
         >
           Edit →
         </Link>
       </div>
 
       {/* Auto-refresh progress bar */}
-      <div className="h-0.5 bg-gray-900 overflow-hidden">
-        <div
-          key={refreshKey}
-          className="h-full bg-gray-600"
-          style={{ animation: 'shrink 30s linear forwards' }}
-        />
+      <div className="h-px bg-zinc-900 overflow-hidden">
+        <div key={refreshKey} className="h-full bg-zinc-600" style={{ animation: 'shrink 30s linear forwards' }} />
       </div>
 
       {/* Screen disabled banner */}
       {overlay && !overlay.enabled && (
-        <div className="flex items-center gap-3 px-8 py-3 bg-gray-950 border-b border-gray-800">
-          <span className="w-2 h-2 rounded-full bg-gray-600 flex-shrink-0" />
-          <span className="text-xs uppercase tracking-widest text-gray-500">Screen is disabled</span>
+        <div className="flex items-center gap-3 px-6 py-2.5 bg-amber-950/20 border-b border-amber-900/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+          <span className="text-xs uppercase tracking-widest text-amber-500/80">Screen is disabled</span>
         </div>
       )}
 
-      <div className="p-8 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-5 max-w-xl mx-auto space-y-3">
 
-        {/* Mirror Status */}
-        <section className="bg-gray-900 rounded-lg p-5 space-y-3">
-          <h2 className="text-xs uppercase tracking-widest text-gray-600">Display</h2>
+        {/* Mirror status card */}
+        <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-4">
           {overlay && appSettings ? (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Status</span>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${overlay.enabled ? 'bg-white text-black' : 'bg-gray-800 text-gray-500'}`}>
-                  {overlay.enabled ? 'ACTIVE' : 'OFF'}
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${overlay.enabled ? 'bg-white shadow-[0_0_6px_2px_rgba(255,255,255,0.4)]' : 'bg-zinc-600'}`} />
+                  <span className={`text-base font-semibold tracking-wide ${overlay.enabled ? 'text-white' : 'text-zinc-500'}`}>
+                    {overlay.enabled ? 'Mirror Active' : 'Mirror Off'}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <span className={`text-xs px-2.5 py-1 rounded-full ${appSettings.muted ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-700 text-white'}`}>
+                    {appSettings.muted ? '🔇 Muted' : '🔊 Sound'}
+                  </span>
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400">{appSettings.clockFormat}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Opacity</span>
-                <span className="text-sm text-white">{Math.round(overlay.opacity * 100)}%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Sound</span>
-                <span className={`text-xs px-2.5 py-1 rounded-full ${appSettings.muted ? 'bg-gray-800 text-gray-500' : 'bg-white text-black font-semibold'}`}>
-                  {appSettings.muted ? 'MUTED' : 'ON'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Clock</span>
-                <span className="text-xs text-gray-500">{appSettings.clockFormat}</span>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-zinc-600">
+                  <span>Opacity</span>
+                  <span className="text-zinc-400">{Math.round(overlay.opacity * 100)}%</span>
+                </div>
+                <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${overlay.opacity * 100}%` }} />
+                </div>
               </div>
             </>
           ) : (
-            <div className="text-gray-700 text-sm">Loading...</div>
+            <div className="space-y-3 animate-pulse">
+              <div className="h-5 w-32 bg-zinc-800 rounded-lg" />
+              <div className="h-1 bg-zinc-800 rounded-full" />
+            </div>
           )}
         </section>
 
         {/* Widgets */}
-        <section className="bg-gray-900 rounded-lg p-5 space-y-3">
-          <h2 className="text-xs uppercase tracking-widest text-gray-600">Widgets</h2>
+        <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-3">
+          <h2 className="text-xs uppercase tracking-widest text-zinc-600">Widgets</h2>
           {appSettings ? (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {Object.entries(appSettings.widgets).map(([key, enabled]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${enabled ? 'bg-white' : 'bg-gray-700'}`} />
-                  <span className={`text-sm ${enabled ? 'text-gray-300' : 'text-gray-700'}`}>{widgetLabels[key]}</span>
+                <div key={key} className={`flex flex-col items-center gap-2 py-3 rounded-xl border transition-colors ${enabled ? 'bg-zinc-800 border-zinc-700' : 'border-zinc-800'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-white' : 'bg-zinc-700'}`} />
+                  <span className={`text-xs capitalize ${enabled ? 'text-zinc-300' : 'text-zinc-700'}`}>{key}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-gray-700 text-sm">Loading...</div>
+            <div className="grid grid-cols-5 gap-2 animate-pulse">
+              {[...Array(5)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-zinc-800/50" />)}
+            </div>
           )}
         </section>
 
-        {/* Video */}
-        <section className="bg-gray-900 rounded-lg p-5 space-y-3">
-          <h2 className="text-xs uppercase tracking-widest text-gray-600">Video</h2>
-          {video ? (
-            <div className="text-gray-400 text-xs break-all">{video.url}</div>
-          ) : (
-            <div className="text-gray-700 text-sm">No video set</div>
-          )}
-        </section>
+        {/* Events + Video */}
+        <div className="grid grid-cols-2 gap-3">
+          <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs uppercase tracking-widest text-zinc-600">Events</h2>
+              <span className="text-xs text-zinc-700 tabular-nums">{events.length}/10</span>
+            </div>
+            {events.length === 0 ? (
+              <div className="text-zinc-700 text-xs">No events</div>
+            ) : (
+              <ul className="space-y-2">
+                {events.map((e, i) => (
+                  <li key={e.id} className="flex items-baseline gap-2">
+                    <span className="text-xs text-zinc-700 tabular-nums w-4 flex-shrink-0">{i + 1}</span>
+                    <span className={`text-xs truncate ${i === 0 ? 'text-white' : 'text-zinc-600'}`}>{e.title}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
-        {/* Events */}
-        <section className="bg-gray-900 rounded-lg p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs uppercase tracking-widest text-gray-600">Events</h2>
-            <span className="text-xs text-gray-700">{events.length} / 10</span>
-          </div>
-          {events.length === 0 ? (
-            <div className="text-gray-700 text-sm">No events</div>
-          ) : (
-            <ul className="space-y-1.5">
-              {events.map((e, i) => (
-                <li key={e.id} className={`text-sm truncate ${i === 0 ? 'text-white' : 'text-gray-600'}`}>{e.title}</li>
-              ))}
-            </ul>
-          )}
-        </section>
+          <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-zinc-600">Video</h2>
+            {video ? (
+              <p className="text-xs text-zinc-500 break-all leading-relaxed">{video.url}</p>
+            ) : (
+              <div className="text-zinc-700 text-xs">No video set</div>
+            )}
+          </section>
+        </div>
 
         {/* Quotes */}
-        <section className="bg-gray-900 rounded-lg p-5 space-y-3 md:col-span-2">
+        <section className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs uppercase tracking-widest text-gray-600">Ticker Quotes</h2>
-            <span className="text-xs text-gray-700">{quotes.length}</span>
+            <h2 className="text-xs uppercase tracking-widest text-zinc-600">Ticker Quotes</h2>
+            <span className="text-xs text-zinc-700 tabular-nums">{quotes.length}</span>
           </div>
           {quotes.length === 0 ? (
-            <div className="text-gray-700 text-sm">No quotes</div>
+            <div className="text-zinc-700 text-xs">No quotes</div>
           ) : (
-            <ul className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {quotes.map(q => (
-                <li key={q.id} className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded truncate max-w-xs">{q.title}</li>
+                <span key={q.id} className="text-xs text-zinc-500 bg-zinc-800 border border-zinc-700/50 px-2.5 py-1 rounded-lg truncate max-w-xs">{q.title}</span>
               ))}
-            </ul>
+            </div>
           )}
         </section>
 
-      </div>
+        <div className="text-center py-4">
+          <Link href="/admin/rec" className="text-xs text-zinc-700 hover:text-zinc-400 transition-colors">
+            Edit content & settings →
+          </Link>
+        </div>
 
-      <div className="text-center pb-8">
-        <Link href="/admin/rec" className="text-xs text-gray-700 hover:text-gray-400 transition-colors">
-          Edit content & settings →
-        </Link>
       </div>
     </div>
   );
