@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 export default function Home() {
   const [overlay, setOverlay] = useState<OverlaySettings>({ enabled: true, opacity: 1 });
   const [appSettings, setAppSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [initialLoaded, setInitialLoaded] = useState(false);
 
   useEffect(() => {
     const loadData = () => {
@@ -32,6 +33,7 @@ export default function Home() {
       ]).then(([overlayData, settingsData]) => {
         if (overlayData) setOverlay(overlayData);
         if (settingsData) setAppSettings(settingsData);
+        setInitialLoaded(true);
       });
     };
 
@@ -40,6 +42,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  if (!initialLoaded) return null;
   if (!overlay.enabled) return null;
 
   const { widgets, clockFormat, muted } = appSettings;
