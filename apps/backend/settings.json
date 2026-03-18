@@ -1,8 +1,8 @@
 {
   "pin": "123456",
   "clockFormat": "24h",
-  "muted": true,
-  "volume": 80,
+  "muted": false,
+  "volume": 30,
   "videoFullscreen": false,
   "widgets": {
     "clock": true,
