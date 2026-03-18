@@ -112,30 +112,45 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 
-// 🗓️ Upcoming public holidays — fetched from Nager.Date (free, no key)
+// 🗓️ Upcoming public holidays — Nager.Date API with local fallback
 const publicHolidayCache = {}; // keyed by year
+
+function localUpcoming(todayMs, limitMs, year) {
+  const results = [];
+  holidays.forEach(h => {
+    const d = new Date(`${h.date} ${year}`);
+    if (isNaN(d.getTime())) return;
+    const ms = d.getTime();
+    if (ms >= todayMs && ms <= limitMs)
+      results.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, type: 'public' });
+  });
+  return results;
+}
 
 app.get('/api/events/public', async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const limit = new Date(today);
-  limit.setDate(limit.getDate() + 14);
+  limit.setDate(limit.getDate() + 30);
+  const todayMs = today.getTime();
+  const limitMs = limit.getTime();
+  const thisYear = today.getFullYear();
 
   try {
-    const yearsNeeded = [today.getFullYear()];
-    if (limit.getFullYear() > today.getFullYear()) yearsNeeded.push(limit.getFullYear());
+    const yearsNeeded = [thisYear];
+    if (limit.getFullYear() > thisYear) yearsNeeded.push(thisYear + 1);
 
     const allHolidays = [];
     for (const year of yearsNeeded) {
       if (!publicHolidayCache[year]) {
-        const resp = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/IN`);
+        const resp = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/IN`, { timeout: 5000 });
         publicHolidayCache[year] = resp.data;
       }
       allHolidays.push(...publicHolidayCache[year]);
     }
 
     const upcoming = allHolidays
-      .filter(h => { const d = new Date(h.date); return d >= today && d <= limit; })
+      .filter(h => { const ms = new Date(h.date).getTime(); return ms >= todayMs && ms <= limitMs; })
       .map(h => ({
         id: `pub_${h.date}`,
         title: h.name,
@@ -144,10 +159,18 @@ app.get('/api/events/public', async (req, res) => {
       }))
       .sort((a, b) => a.id.localeCompare(b.id));
 
-    res.json(upcoming);
+    if (upcoming.length > 0) return res.json(upcoming);
+
+    // API returned no results — fall back to local data
+    throw new Error('No results from API');
   } catch (err) {
-    console.error('Failed to fetch public holidays:', err.message);
-    res.json([]);
+    console.warn('Public holidays API unavailable, using local data:', err.message);
+    const fallback = [];
+    for (const year of [thisYear, thisYear + 1]) {
+      fallback.push(...localUpcoming(todayMs, limitMs, year));
+    }
+    fallback.sort((a, b) => new Date(`${a.date} ${thisYear}`).getTime() - new Date(`${b.date} ${thisYear}`).getTime());
+    res.json(fallback);
   }
 });
 
