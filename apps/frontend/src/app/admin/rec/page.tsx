@@ -9,6 +9,7 @@ type AppSettings = {
   pin: string;
   clockFormat: '12h' | '24h';
   muted: boolean;
+  volume: number;
   videoFullscreen: boolean;
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
@@ -117,7 +118,7 @@ function PinScreen({ onUnlock }: { onUnlock: () => void }) {
 function EditScreen() {
   const [overlay, setOverlay] = useState<OverlaySettings>({ enabled: true, opacity: 1 });
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    pin: '123456', clockFormat: '12h', muted: true, videoFullscreen: false,
+    pin: '123456', clockFormat: '12h', muted: true, volume: 80, videoFullscreen: false,
     widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
   });
   const [events, setEvents] = useState<Item[]>([]);
@@ -298,6 +299,15 @@ function EditScreen() {
           <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
             <span className="text-sm text-zinc-300">Sound</span>
             <Toggle on={!appSettings.muted} onChange={toggleMute} />
+          </div>
+          <div className={`space-y-2 transition-opacity duration-200 ${appSettings.muted ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className="flex justify-between text-xs text-zinc-600">
+              <span>Volume</span>
+              <span className="text-zinc-400">{appSettings.volume}%</span>
+            </div>
+            <input type="range" min="0" max="100" step="5" value={appSettings.volume}
+              onChange={e => saveSetting({ volume: parseInt(e.target.value) })}
+              className="w-full accent-white cursor-pointer h-1 rounded-full" />
           </div>
         </section>
 

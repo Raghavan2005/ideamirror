@@ -11,6 +11,7 @@ type OverlaySettings = { enabled: boolean; opacity: number };
 type AppSettings = {
   clockFormat: '12h' | '24h';
   muted: boolean;
+  volume: number;
   videoFullscreen: boolean;
   widgets: { clock: boolean; weather: boolean; events: boolean; quotes: boolean; player: boolean };
 };
@@ -18,6 +19,7 @@ type AppSettings = {
 const DEFAULT_SETTINGS: AppSettings = {
   clockFormat: '12h',
   muted: true,
+  volume: 80,
   videoFullscreen: false,
   widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
 };
@@ -62,7 +64,7 @@ export default function Home() {
     </div>
   );
 
-  const { widgets, clockFormat, muted, videoFullscreen } = appSettings;
+  const { widgets, clockFormat, muted, volume, videoFullscreen } = appSettings;
 
   return (
     <div className="fixed inset-0 bg-black" style={{ opacity: overlay.opacity }}>
@@ -80,8 +82,8 @@ export default function Home() {
       )}
 
       {widgets.player && (
-        <div className={videoFullscreen ? 'fixed inset-0 z-50' : 'absolute bottom-8 left-8 w-72 h-44 rounded-lg overflow-hidden'}>
-          <Player muted={muted} />
+        <div className={videoFullscreen ? 'fixed inset-0 z-50' : 'absolute bottom-8 left-8 w-72 h-44 rounded-2xl overflow-hidden'}>
+          <Player muted={muted} volume={volume} />
         </div>
       )}
 

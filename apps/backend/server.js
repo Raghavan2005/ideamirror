@@ -249,6 +249,7 @@ const DEFAULT_SETTINGS = {
   pin: '123456',
   clockFormat: '12h',
   muted: true,
+  volume: 80,
   videoFullscreen: false,
   widgets: { clock: true, weather: true, events: true, quotes: true, player: true },
 };
