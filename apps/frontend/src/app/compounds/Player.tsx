@@ -12,23 +12,24 @@ function toEmbedUrl(url: string, muted: boolean): string {
 }
 
 export default function Player({ muted }: Props) {
-  const [embedUrl, setEmbedUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('http://localhost:4000/api/playlist')
       .then(res => res.json())
       .then(data => {
         const url = Array.isArray(data) && data.length > 0 ? data[0].url : DEFAULT_URL;
-        setEmbedUrl(toEmbedUrl(url, muted));
+        setVideoUrl(url);
       })
-      .catch(() => setEmbedUrl(toEmbedUrl(DEFAULT_URL, muted)));
-  }, [muted]);
+      .catch(() => setVideoUrl(DEFAULT_URL));
+  }, []); // fetch once on mount — muted is handled via URL rebuild below
 
-  if (!embedUrl) return null;
+  if (!videoUrl) return null;
 
   return (
     <iframe
-      src={embedUrl}
+      key={`${videoUrl}-${muted}`}
+      src={toEmbedUrl(videoUrl, muted)}
       allow="autoplay; encrypted-media"
       allowFullScreen
       style={{ width: '100%', height: '100%', border: 'none', borderRadius: '0.375rem' }}
