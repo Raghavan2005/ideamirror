@@ -121,7 +121,20 @@ else
 [Desktop Entry]
 Type=Application
 Name=Idea Mirror Kiosk
-Exec=bash -c 'sleep 8 && $CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble --disable-restore-session-state http://localhost:3000'
+Exec=bash -c 'sleep 8 \
+  && xset s off \
+  && xset s noblank \
+  && xset -dpms \
+  && $CHROMIUM_BIN \
+       --kiosk \
+       --noerrdialogs \
+       --disable-infobars \
+       --no-first-run \
+       --disable-session-crashed-bubble \
+       --disable-restore-session-state \
+       --disable-pinch \
+       --overscroll-history-navigation=0 \
+       http://localhost:3000'
 Hidden=false
 X-GNOME-Autostart-enabled=true
 EOF
