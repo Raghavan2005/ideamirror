@@ -11,6 +11,14 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // <img> is fine for a local Pi app — no CDN/optimization needed
+      "@next/next/no-img-element": "off",
+      // useEffect deps warnings — intentional in several places
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
 ];
 
 export default eslintConfig;

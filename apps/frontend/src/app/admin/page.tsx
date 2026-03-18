@@ -54,10 +54,6 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const widgetLabels: Record<string, string> = {
-    clock: 'Clock', weather: 'Weather', events: 'Events', quotes: 'Quotes', player: 'Player',
-  };
-
   return (
     <div className="min-h-screen bg-zinc-950 text-white font-mono">
 

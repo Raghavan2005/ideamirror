@@ -50,7 +50,6 @@ export default function EventList({ eventCount = 5 }: { eventCount?: number }) {
     fetchEvents();
     const interval = setInterval(fetchEvents, 5000);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventCount]);
 
   if (events.length === 0) return null;
