@@ -160,11 +160,9 @@ app.get('/api/events/public', async (req, res) => {
       .sort((a, b) => a.id.localeCompare(b.id));
 
     if (upcoming.length > 0) return res.json(upcoming);
-
-    // API returned no results — fall back to local data
-    throw new Error('No results from API');
+    throw new Error('empty'); // fall through to local data
   } catch (err) {
-    console.warn('Public holidays API unavailable, using local data:', err.message);
+    if (err.message !== 'empty') console.warn('Public holidays API error:', err.message);
     const fallback = [];
     for (const year of [thisYear, thisYear + 1]) {
       fallback.push(...localUpcoming(todayMs, limitMs, year));
