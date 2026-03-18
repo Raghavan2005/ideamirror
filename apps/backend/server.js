@@ -122,7 +122,7 @@ function localUpcoming(todayMs, limitMs, year) {
     if (isNaN(d.getTime())) return;
     const ms = d.getTime();
     if (ms >= todayMs && ms <= limitMs)
-      results.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, type: 'public' });
+      results.push({ id: `pub_${year}_${h.date.replace(/\s+/g, '_')}_${h.holiday.replace(/\s+/g, '_')}`, title: h.holiday, date: h.date, type: 'public' });
   });
   return results;
 }
